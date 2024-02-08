@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.routers import router as api_router
-from src.auth.routers import router as auth_router
+# from src.auth.routers import router as auth_router
 
 
 app = FastAPI()
@@ -23,7 +23,7 @@ app.add_middleware(
 
 
 app.include_router(api_router, tags=["api"])
-app.include_router(auth_router, tags=["auth"])
+# app.include_router(auth_router, tags=["auth"])
 
 
 @app.get("/", response_class=HTMLResponse)
