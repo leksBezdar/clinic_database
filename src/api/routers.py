@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from . import models, schemas
+from . import schemas
 from .service import PatientManager
 
 router = APIRouter()
@@ -7,8 +7,8 @@ router = APIRouter()
 
 @router.post("/create_patient_record", response_model=schemas.Patient)
 async def create_patient_record(
-	access_token: str,
-  	patient_data: schemas.PatientCreate
+  	patient_data: schemas.PatientCreate,
+	access_token: str = None,
 ):
 
     patient_manager = PatientManager()

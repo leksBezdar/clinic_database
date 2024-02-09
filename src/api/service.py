@@ -41,20 +41,19 @@ class PatientCRUD:
         
         therapist_id = await self._get_therapist_id_from_token(access_token)
         patient_records = await PatientDAO.find_all(*filter, offset=offset, limit=limit, **filter_by)
+        
         return patient_records
     
     async def update_patient_record(self, access_token: str, patient_id: int, patient_in: schemas.PatientUpdate) -> models.Patient:
         
-        therapist_id = await self._get_therapist_id_from_token(access_token)
-        
+        therapist_id = await self._get_therapist_id_from_token(access_token)  
         patient_record = await PatientDAO.update(models.Patient.id==patient_id, obj_in=patient_in)
-        
+
         return patient_record
     
     async def delete_patient_record(self, access_token: str, patient_id: int) -> dict:
         
         therapist_id = await self._get_therapist_id_from_token(access_token)
-        
         await PatientDAO.delete(models.Patient.id==patient_id)
         
         return {"Message": f"Therapist {therapist_id} deleted pathient record {patient_id} successfully"}
