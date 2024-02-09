@@ -10,6 +10,10 @@ class PatientBase(BaseModel):
   living_place: str
   job_title: str
   inhabited_locality: str
+  diagnosis: str
+  first_visit: date
+  last_visit: date
+  treatment: str
 
 class PatientCreate(PatientBase):
   pass
@@ -24,17 +28,11 @@ class PatientUpdate(BaseModel):
   living_place: str | None = None 
   job_title: str | None = None 
   inhabited_locality: str | None = None 
+  diagnosis: str | None = None
+  first_visit: date | None = None
+  last_visit: date | None = None
+  treatment: str | None = None
   
 class Patient(PatientBase):
   id: int
-  
-
-class PatientRecordBase(BaseModel):
-  diagnosis: str
-  first_visit: date
-  last_visit: date
-  treatment: str
-  
-class PatientRecordCreate(PatientBase):
   therapist_id: str
-  patient_id: int 
