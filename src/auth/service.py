@@ -24,32 +24,22 @@ from ..utils import get_unique_id
 
 class UserCRUD:
 
-    def __init__(self, db: AsyncSession):
-        self.db = db
-
     async def create_user(self, user: schemas.UserCreate) -> models.User:
 
-        if await self.get_existing_user(email=user.email, username=user.username):
+        if await self.get_existing_user(username=user.username):
             raise exceptions.UserAlreadyExists
-
         id = await get_unique_id()
 
         hashed_password = await utils.get_hashed_password(user.password)
 
         # Создание экземпляра User с предоставленными данными
         db_user = await UserDAO.add(
-            self.db,
             schemas.UserCreateDB(
                 **user.model_dump(),
                 id=id,
                 hashed_password=hashed_password
             )
         )
-
-        self.db.add(db_user)
-        await self.db.commit()
-        await self.db.refresh(db_user)
-
         return db_user
 
     async def authenticate_user(self, username: str, password: str) -> User:
@@ -69,10 +59,10 @@ class UserCRUD:
         if not refresh_token:
             return exceptions.InactiveUser
 
-        refresh_session = await RefreshTokenDAO.find_one_or_none(self.db, Refresh_token.refresh_token == refresh_token)
+        refresh_session = await RefreshTokenDAO.find_one_or_none(Refresh_token.refresh_token == refresh_token)
 
         if refresh_session:
-            await RefreshTokenDAO.delete(self.db, id=refresh_session.id)
+            await RefreshTokenDAO.delete(id=refresh_session.id)
 
         response = JSONResponse(content={
             "message": "logout successful",
@@ -81,101 +71,82 @@ class UserCRUD:
         response.delete_cookie(key="access_token")
         response.delete_cookie(key="refresh_token")
 
-        await self.db.commit()
-
         return response
 
-    async def get_existing_user(self, email: str = None, username: str = None, user_id: str = None, token: str = None) -> User:
-        if not email and not username and not user_id and not token:
+    async def get_existing_user(self, username: str = None, user_id: str = None, token: str = None) -> User:
+        if not username and not user_id and not token:
             raise exceptions.NoUserData
 
         if token:
-            user_id = await TokenCrud.get_access_token_payload(db=self.db, access_token=token)
+            user_id = await TokenCrud.get_access_token_payload(access_token=token)
 
-        user = await UserDAO.find_one_or_none(self.db, or_(
-            User.email == email,
+        user = await UserDAO.find_one_or_none(or_(
             User.username == username,
             User.id == user_id))
         
         return user
 
     # Получение списка всех пользователей с поддержкой пагинации
-
     async def get_all_users(self, *filter, offset: int = 0, limit: int = 100, **filter_by) -> list[User]:
 
-        users = await UserDAO.find_all(self.db, *filter, offset=offset, limit=limit, **filter_by)
+        users = await UserDAO.find_all(*filter, offset=offset, limit=limit, **filter_by)
 
         return users
 
     async def _get_refresh_token_by_user_id(self, user: models.User) -> models.Refresh_token:
 
-        refresh_token = await RefreshTokenDAO.find_one_or_none(self.db, Refresh_token.user_id == user.id)
+        refresh_token = await RefreshTokenDAO.find_one_or_none(Refresh_token.user_id == user.id)
 
         return refresh_token
 
     async def get_user_by_access_token(self, access_token: str) -> User | None:
 
-        user_id = await TokenCrud.get_access_token_payload(self.db, access_token=access_token)
+        user_id = await TokenCrud.get_access_token_payload(access_token=access_token)
 
         return await self.get_existing_user(user_id=user_id)
 
-    async def abort_user_sessions(self, email: str = None, username: str = None, user_id: str = None) -> None:
+    async def abort_user_sessions(self, username: str = None, user_id: str = None) -> None:
 
-        if not email and not username and not user_id:
+        if not username and not user_id:
             raise exceptions.NoUserData
 
-        user = await self.get_existing_user(email=email, username=username, user_id=user_id)
+        user = await self.get_existing_user(username=username, user_id=user_id)
 
         if not user:
             raise exceptions.UserDoesNotExist
 
-        refresh_token = await RefreshTokenDAO.find_one_or_none(self.db, Refresh_token.user_id == user.id)
+        refresh_token = await RefreshTokenDAO.find_one_or_none(Refresh_token.user_id == user.id)
 
         if refresh_token:
-            await RefreshTokenDAO.delete(self.db, user_id=refresh_token.user_id)
+            await RefreshTokenDAO.delete(user_id=refresh_token.user_id)
 
-        await UserDAO.update(
-            self.db,
-            User.id == user.id,
-            obj_in={'is_active': False},
-        )
-
-        await self.db.commit()
+        await UserDAO.update(User.id == user.id, obj_in={'is_active': False})
 
         return {"message": "Delete successful"}
 
-    async def delete_user(self, email: str = None, username: str = None, user_id: str = None) -> None:
+    async def delete_user(self, username: str = None, user_id: str = None) -> None:
 
-        if not email and not username and not user_id:
+        if not username and not user_id:
             raise exceptions.NoUserData
 
-        user = await self.get_existing_user(email=email, username=username, user_id=user_id)
+        user = await self.get_existing_user(username=username, user_id=user_id)
 
         if not user:
             raise exceptions.UserDoesNotExist
 
-        refresh_token = await RefreshTokenDAO.find_one_or_none(self.db, Refresh_token.user_id == user.id)
+        refresh_token = await RefreshTokenDAO.find_one_or_none(Refresh_token.user_id == user.id)
 
         if refresh_token:
-            await RefreshTokenDAO.delete(self.db, user_id=refresh_token.user_id)
+            await RefreshTokenDAO.delete(user_id=refresh_token.user_id)
 
-        await UserDAO.delete(self.db, or_(
-            user_id == User.id,
-            username == User.username,
-            email == User.email))
-
-        await self.db.commit()
+        await UserDAO.delete(or_(user_id == User.id, username == User.username))
 
         return {"Message": "Delete was successful"}
 
 
 class TokenCrud:
 
-    def __init__(self, db: AsyncSession):
-        self.db = db
-
     # Функция для создания access токена с указанием срока действия
-
     async def _create_access_token(self, data: str):
 
         """ Создает access токен """
@@ -211,16 +182,13 @@ class TokenCrud:
         refresh_token_expires = timedelta(
             days=int(REFRESH_TOKEN_EXPIRE_DAYS))
 
-        db_token = await RefreshTokenDAO.add(
-            self.db,
+        await RefreshTokenDAO.add(
             schemas.RefreshTokenCreate(
                 user_id=user_id,
                 refresh_token=refresh_token,
                 expires_at=refresh_token_expires.total_seconds()
             )
         )
-        await self.db.commit()
-        await self.db.refresh(db_token)
 
         if isDev:
             await self._set_cookies(response=response, access_token=access_token, refresh_token=refresh_token)
@@ -241,7 +209,7 @@ class TokenCrud:
             httponly=True
         )
 
-    async def get_access_token_payload(db: AsyncSession, access_token: str):
+    async def get_access_token_payload(self, access_token: str):
         try:
             payload = jwt.decode(access_token,
                                  TOKEN_SECRET_KEY,
@@ -268,7 +236,6 @@ class TokenCrud:
         refresh_token_expires = timedelta(days=int(REFRESH_TOKEN_EXPIRE_DAYS))
 
         await RefreshTokenDAO.update(
-            self.db,
             Refresh_token.id == refresh_token_session.id,
             obj_in=schemas.RefreshTokenUpdate(
                 refresh_token=refresh_token,
@@ -276,7 +243,6 @@ class TokenCrud:
                 user_id=user.id,
             )
         )
-        await self.db.commit()
 
         await self._set_cookies(response=response, access_token=access_token, refresh_token=refresh_token)
 
@@ -284,7 +250,7 @@ class TokenCrud:
 
     async def _check_refresh_token_session(self, token: str):
 
-        refresh_token_session = await RefreshTokenDAO.find_one_or_none(self.db, Refresh_token.refresh_token == token)
+        refresh_token_session = await RefreshTokenDAO.find_one_or_none(Refresh_token.refresh_token == token)
 
         if refresh_token_session is None:
             raise exceptions.InvalidToken
@@ -294,7 +260,7 @@ class TokenCrud:
             await RefreshTokenDAO.delete(id=refresh_token_session.id)
             raise exceptions.TokenExpired
 
-        user = await UserDAO.find_one_or_none(self.db, id=refresh_token_session.user_id)
+        user = await UserDAO.find_one_or_none(id=refresh_token_session.user_id)
 
         if user is None:
             raise exceptions.InvalidToken
@@ -305,11 +271,6 @@ class TokenCrud:
 
 
 class DatabaseManager:
-    def __init__(self, db: AsyncSession):
-        self.db = db
-        self.user_crud = UserCRUD(db)
-        self.token_crud = TokenCrud(db)
-
-    # Применение изменений к базе данных
-    async def commit(self):
-        await self.db.commit()
+    def __init__(self):
+        self.user_crud = UserCRUD()
+        self.token_crud = TokenCrud()

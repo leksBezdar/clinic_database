@@ -2,9 +2,8 @@ from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
 from fastapi import HTTPException
 from loguru import logger
 
-from sqlalchemy import delete, insert, select, update, func, desc
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
 from .database import Base, async_session_maker
@@ -35,7 +34,6 @@ class BaseDAO(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                     **create_data).returning(cls.model)
                 result = await db.execute(stmt)
                 await db.commit()
-                # await db.refresh(result)
                 return result.scalars().first()
             except (SQLAlchemyError, Exception) as e:
                 print(e)
@@ -51,65 +49,65 @@ class BaseDAO(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 raise HTTPException(status_code=500, detail=msg)
 
 
-    # @classmethod
-    # async def find_one_or_none(cls, *filter, **filter_by) -> Optional[ModelType]:
+    @classmethod
+    async def find_one_or_none(cls, *filter, **filter_by) -> Optional[ModelType]:
 
-    #     db: AsyncSession = get_async_session()
+        async with async_session_maker() as db: 
 
-    #     stmt = select(cls.model).filter(*filter).filter_by(**filter_by)
-    #     result = await db.execute(stmt)
+            stmt = select(cls.model).filter(*filter).filter_by(**filter_by)
+            result = await db.execute(stmt)
 
-    #     return result.scalars().one_or_none()
+            return result.scalars().one_or_none()
 
-    # @classmethod
-    # async def find_all(
-    #     cls,
-    #     *filter,
-    #     offset: int = 0,
-    #     limit: int = 10000,
-    #     **filter_by
-    # ) -> List[ModelType]:
+    @classmethod
+    async def find_all(
+        cls,
+        *filter,
+        offset: int | None = None,
+        limit: int | None = None,
+        **filter_by
+    ) -> List[ModelType]:
 
-    #     db: AsyncSession = get_async_session()
+        async with async_session_maker() as db: 
 
-    #     stmt = (
-    #         select(cls.model)
-    #         .filter(*filter)
-    #         .filter_by(**filter_by)
-    #         .offset(offset)
-    #         .limit(limit)
-    #     )
-    #     result = await db.execute(stmt)
-    #     return result.scalars().all()
+            stmt = (
+                select(cls.model)
+                .filter(*filter)
+                .filter_by(**filter_by)
+                .offset(offset)
+                .limit(limit)
+            )
+            result = await db.execute(stmt)
+            return result.scalars().all()
 
-    # @classmethod
-    # async def update(
-    #     cls,
-    #     *where,
-    #     obj_in: Union[UpdateSchemaType, Dict[str, Any]],
-    # ) -> Optional[ModelType]:
-
-    #     db: AsyncSession = get_async_session()
-
-    #     if isinstance(obj_in, dict):
-    #         update_data = obj_in
-    #     else:
-    #         update_data = obj_in.model_dump(exclude_unset=True)
-    #     stmt = (
-    #         update(cls.model).
-    #         where(*where).
-    #         values(**update_data).
-    #         returning(cls.model)
-    #     )
+    @classmethod
+    async def update(
+        cls,
+        *where,
+        obj_in: Union[UpdateSchemaType, Dict[str, Any]],
+    ) -> Optional[ModelType]:
         
-    #     result = await db.execute(stmt)
-    #     await db.commit()
+        async with async_session_maker() as db: 
+            
+            if isinstance(obj_in, dict):
+                update_data = obj_in
+            else:
+                update_data = obj_in.model_dump(exclude_unset=True)
+            stmt = (
+                update(cls.model).
+                where(*where).
+                values(**update_data).
+                returning(cls.model)
+            )
+            
+            result = await db.execute(stmt)
+            await db.commit()
+            return result.scalars().one()
 
-    #     return result.scalars().one()
-
-    # @classmethod
-    # async def delete(cls,  *filter, **filter_by) -> None:
-    #     db: AsyncSession = get_async_session()
-    #     stmt = delete(cls.model).filter(*filter).filter_by(**filter_by)
-
-    #     await db.execute(stmt)
+    @classmethod
+    async def delete(cls,  *filter, **filter_by) -> None:
+        async with async_session_maker() as db: 
+            stmt = delete(cls.model).filter(*filter).filter_by(**filter_by)
+            await db.execute(stmt)
+            await db.commit()
+            

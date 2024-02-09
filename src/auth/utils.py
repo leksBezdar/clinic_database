@@ -45,7 +45,6 @@ async def get_hashed_password(password: str):
 
     salt = await get_random_string()
     hash = await hash_password(password, salt)
-
     hashed_password = f"{salt}${hash}"
 
     return hashed_password

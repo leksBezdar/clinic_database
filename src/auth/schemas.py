@@ -8,13 +8,11 @@ from .config import (
 
 
 class UserBase(BaseModel):
-    email: EmailStr
     username: str
     is_superuser: bool = Field(False)
 
 
 class UserCreate(UserBase):
-    email: EmailStr
     username: str
     password: str
 
@@ -34,7 +32,6 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(UserBase):
-    email: EmailStr | None
     password: str | None
 
 
