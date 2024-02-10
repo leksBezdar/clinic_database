@@ -8,7 +8,7 @@ router = APIRouter()
 @router.post("/create_patient_record", response_model=schemas.Patient)
 async def create_patient_record(
   	patient_data: schemas.PatientCreate,
-	access_token: str = None,
+	access_token: str,
 ):
 
     patient_manager = PatientManager()
