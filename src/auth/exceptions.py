@@ -59,3 +59,7 @@ class UserAlreadyExists(HTTPException):
 class UserAlreadyActive(HTTPException):
     def __init__(self):
         super().__init__(status_code=409, detail="User is already active")
+        
+class Forbidden(HTTPException):
+    def __init__(self):
+        super().__init__(status_code=403, detail="Forbidden for you")

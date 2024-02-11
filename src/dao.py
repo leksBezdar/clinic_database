@@ -88,7 +88,6 @@ class BaseDAO(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> Optional[ModelType]:
         
         async with async_session_maker() as db: 
-            
             if isinstance(obj_in, dict):
                 update_data = obj_in
             else:

@@ -89,6 +89,17 @@ async def refresh_token(
     return new_token
 
 
+@router.patch("/set_super_user")
+async def set_super_user(
+    token: str,
+    user_id: str,    
+):
+    db_manager = DatabaseManager()
+    user_crud = db_manager.user_crud
+
+    return await user_crud.set_super_user(access_token=token, user_id=user_id)
+
+
 @router.delete("/delete_user_sessions")
 async def delete_user_sessions(
     username: str = None,

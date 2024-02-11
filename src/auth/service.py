@@ -6,7 +6,6 @@ from fastapi import Response
 from fastapi.responses import JSONResponse
 
 from sqlalchemy import or_
-from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
 from . import models, exceptions, schemas, utils
@@ -68,9 +67,6 @@ class UserCRUD:
             "message": "logout successful",
         })
 
-        response.delete_cookie(key="access_token")
-        response.delete_cookie(key="refresh_token")
-
         return response
 
     async def get_existing_user(self, username: str = None, user_id: str = None, token: str = None) -> User:
@@ -104,6 +100,20 @@ class UserCRUD:
         user_id = await TokenCrud.get_access_token_payload(access_token=access_token)
 
         return await self.get_existing_user(user_id=user_id)
+    
+    async def set_super_user(self, access_token: str, user_id: str) -> dict:
+        
+        superuser = await self.get_existing_user(token=access_token)
+        
+        if superuser.is_superuser:
+            user = await self.get_existing_user(user_id=user_id)
+            if not user:
+                raise exceptions.UserDoesNotExist
+            await UserDAO.update(User.id==user.id, obj_in={"is_superuser": not(user.is_superuser)})
+            
+            return {"Message": f"User {user_id} got the new role"}
+        
+        raise exceptions.Forbidden
 
     async def abort_user_sessions(self, username: str = None, user_id: str = None) -> None:
 
@@ -209,7 +219,8 @@ class TokenCrud:
             httponly=True
         )
 
-    async def get_access_token_payload(self, access_token: str):
+    @staticmethod
+    async def get_access_token_payload(access_token: str):
         try:
             payload = jwt.decode(access_token,
                                  TOKEN_SECRET_KEY,

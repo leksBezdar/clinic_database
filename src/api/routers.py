@@ -10,7 +10,6 @@ async def create_patient_record(
   	patient_data: schemas.PatientCreate,
 	access_token: str,
 ):
-
     patient_manager = PatientManager()
     patient_crud = patient_manager.patient_crud
 
@@ -56,8 +55,7 @@ async def update_patient_record(
 async def delete_patient_record(
     access_token: str,
     patient_id: int
-):
-    
+):  
     patient_manager = PatientManager()
     patient_crud = patient_manager.patient_crud
 
