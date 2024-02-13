@@ -10,7 +10,3 @@ async def check_record_existence(db: AsyncSession, model, record_id):
         raise HTTPException(
             status_code=404, detail=f"{model.__name__} was not found")
     return record
-
-
-async def get_unique_id():
-    return str(uuid4())

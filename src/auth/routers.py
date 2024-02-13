@@ -1,130 +1,84 @@
-from typing import List
-
-from fastapi import APIRouter, Depends, Request, Response
+from typing import Optional
+from fastapi import APIRouter, status, Depends
 
 from . import schemas
-
-from .models import User
-from .service import DatabaseManager
+from .service import UserService, AuthService
 
 
-router = APIRouter(prefix="/auth")
+auth_router = APIRouter(prefix="/auth")
+user_router = APIRouter(prefix="/users")
 
 
-@router.post("/registration/", response_model=schemas.User)
-async def create_user(
-    user_data: schemas.UserCreate,
-) -> User:
-    db_manager = DatabaseManager()
-    user_crud = db_manager.user_crud
-
-    return await user_crud.create_user(user=user_data)
+@auth_router.post("/registration", status_code=status.HTTP_201_CREATED)
+async def registration(
+    user: schemas.UserCreate
+) -> schemas.UserGet:
+    return await UserService.create_user(user)
 
 
-@router.post("/login/")
+@auth_router.post("/login")
 async def login(
-    response: Response,
-    username: str,
-    password: str,
-):
-    db_manager = DatabaseManager()
-    user_crud = db_manager.user_crud
-    token_crud = db_manager.token_crud
+    user: schemas.LoginIn
+) -> schemas.LoginResponse:
+    user = await AuthService.authenticate_user(user.username, user.password)
+    tokens = await AuthService.create_tokens(user.id)
 
-    user = await user_crud.authenticate_user(username=username, password=password)
-    token = await token_crud.create_tokens(user_id=user.id, response=response)
-
-    return {"tokens" : token, "user": user}
+    return {"user": user, "tokens": tokens}
 
 
-@router.post("/logout/")
+@auth_router.post("/logout")
 async def logout(
-    request: Request,
-    response: Response,
-):
-    db_manager = DatabaseManager()
-    user_crud = db_manager.user_crud
-
-    await user_crud.logout(refresh_token=request.cookies.get('refresh_token'))
-
-    return response
+    token: str,
+): 
+    return await AuthService.logout(token)
 
 
-@router.get("/get_user", response_model=None)
+@auth_router.put("/refresh_token")
+async def refresh_token(
+    token: str,
+) -> schemas.Token:
+    return await AuthService.refresh_token(token)
+
+
+@auth_router.delete("/abort_all_sessions")
+async def abort_all_sessions(
+    user_id: str, 
+) -> dict:
+    return await AuthService.abort_all_sessions(user_id)
+
+
+@user_router.get("/get_user")
 async def get_user(
     token: str = None,
     user_id: str = None,
-) -> User | None:
+) -> schemas.UserGet:
+    return await UserService.get_user(token=token, user_id=user_id)
 
-    db_manager = DatabaseManager()
-    user_crud = db_manager.user_crud
-
-    user = await user_crud.get_existing_user(token=token, user_id=user_id)
-
-    return user
-
-
-@router.get("/get_all_users", response_model=List[schemas.User])
+@user_router.get("/get_all_users")
 async def get_all_users(
-    offset: int = 0,
-    limit: int = 10,
-):
-    db_manager = DatabaseManager()
-    user_crud = db_manager.user_crud
+    offset: Optional[int] = 0,
+    limit: Optional[int] = 100,
+    is_active: bool = True,
+) -> list[schemas.UserGet]:
+    return await UserService.get_all_users(is_active=is_active, offset=offset, limit=limit)
 
-    return await user_crud.get_all_users(offset=offset, limit=limit)
-
-
-@router.patch("/refresh_tokens")
-async def refresh_token(
-    token: str,
-    response: Response,
-):
-
-    db_manager = DatabaseManager()
-    token_crud = db_manager.token_crud
-
-    new_token = await token_crud.refresh_token(token, response=response)
-
-    return new_token
-
-
-@router.patch("/set_super_user")
-async def set_super_user(
+@user_router.patch("/set_superuser")
+async def set_superuser(
     token: str,
     user_id: str,    
-):
-    db_manager = DatabaseManager()
-    user_crud = db_manager.user_crud
-
-    return await user_crud.set_super_user(access_token=token, user_id=user_id)
+) -> dict:
+    return await UserService.set_superuser(access_token=token, user_id=user_id)
 
 
-@router.delete("/delete_user_sessions")
-async def delete_user_sessions(
-    username: str = None,
-    email: str = None,
-    user_id: str = None,
-):
-
-    db_manager = DatabaseManager()
-    user_crud = db_manager.user_crud
-
-    response = await user_crud.abort_user_sessions(username=username, email=email, user_id=user_id)
-
-    return response
-
-
-@router.delete("/delete_user")
+@user_router.delete("/delete_user")
 async def delete_user(
-    username: str = None,
-    email: str = None,
-    user_id: str = None,
-):
+    user_id: str,
+) -> dict:
+    return await UserService.delete_user(user_id=user_id)
 
-    db_manager = DatabaseManager()
-    user_crud = db_manager.user_crud
-
-    response = await user_crud.delete_user(username=username, email=email, user_id=user_id)
-
-    return response
+@user_router.delete("/delete_user_from_superuser")
+async def delete_user_from_superuser(
+    token: str,
+    user_id: str,
+) -> dict:
+    return await UserService.delete_user_from_superuser(user_id=user_id, token=token)

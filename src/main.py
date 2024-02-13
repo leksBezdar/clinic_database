@@ -1,34 +1,30 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.auth.routers import auth_router, user_router
 from src.api.routers import router as api_router
-from src.auth.routers import router as auth_router
+
+from .config import settings
 
 
 app = FastAPI()
 
-origins = [
-    "*"
-]
 
-# Добавление middleware для CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=settings.CORS_CREDENTIALS,
+    allow_methods=settings.CORS_METHODS,
+    allow_headers=settings.CORS_HEADERS,
 )
 
 
-app.include_router(api_router, tags=["api"])
-app.include_router(auth_router, tags=["auth"])
+app.include_router(auth_router, tags=["AUTH"])
+app.include_router(user_router, tags=["USER"])
+app.include_router(api_router, tags=["API"])
 
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    return f"""
-    <a href="{str(request.url)}docs"><h1>Documentation</h1></a><br>
-    <a href="{str(request.url)}redoc"><h1>ReDoc</h1></a>
-    """
+    return RedirectResponse(url=str(request.url) + "docs")

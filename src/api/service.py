@@ -1,7 +1,7 @@
 from . import schemas, models
 from .dao import PatientDAO
 
-from ..auth.service import DatabaseManager
+from ..auth.service import AuthService, UserService
 
 
 class PatientCRUD:
@@ -20,10 +20,7 @@ class PatientCRUD:
 
     async def _get_therapist_id_from_token(self, access_token: str) -> str:
         
-        db_manager = DatabaseManager()
-        token_crud = db_manager.token_crud
-        
-        return await token_crud.get_access_token_payload(access_token)
+        return await UserService._get_access_token_payload(access_token)
     
     async def get_patient_records(self, access_token: str, patient_id, offset: int, limit: int, **filter_by) -> list[models.Patient]:
         

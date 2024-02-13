@@ -1,15 +1,21 @@
-from typing import AsyncGenerator
+from sqlalchemy import MetaData, NullPool
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.orm import declarative_base
 
-from sqlalchemy import MetaData
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import sessionmaker, declarative_base
+from .config import settings
+from .db_convention import DB_NAMING_CONVENTION
 
-from .config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
 
-DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 Base = declarative_base()
+metadata = MetaData(naming_convention=DB_NAMING_CONVENTION)
 
-metadata = MetaData()
 
-async_engine = create_async_engine(DATABASE_URL)
-async_session_maker = async_sessionmaker(async_engine,  expire_on_commit=False)
+if settings.MODE == "TEST":
+    DATABASE_URL = settings.TEST_DATABASE_URL
+    DATABASE_PARAMS = {"poolclass": NullPool}
+else:
+    DATABASE_URL = settings.DATABASE_URL
+    DATABASE_PARAMS = {}
+
+async_engine = create_async_engine(DATABASE_URL, **DATABASE_PARAMS)
+async_session_maker = async_sessionmaker(async_engine, expire_on_commit=False)
