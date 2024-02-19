@@ -20,8 +20,9 @@ async def main():
         bp = "Нет"
         ischemia = "Нет"
         dep = "Нет"
-        
+        i = 0
         for row in sheet.iter_rows(min_row=2, max_row=5337, values_only=True):
+            i+=1
             birthday = row[2]
             diagnosis = row[7]
             living_place = row[5]
@@ -59,14 +60,14 @@ async def main():
                 living_place = living_place.strip()
                 inhabited_locality = "Город" if living_place.startswith(('г', 'Г')) else "Село"
 
-            patient_data = schemas.PatientCreateDB(
-                birthday=str(birthday_date),
-                full_name=row[0],
-                gender=row[1],
+            patient_data = schemas.PatientCreate(
                 age=age,
-                inhabited_locality=inhabited_locality,
+                birthday=str(birthday_date),
+                gender=row[1],
+                full_name=row[0],
                 living_place=living_place,
                 job_title=row[6],
+                inhabited_locality=inhabited_locality,
                 diagnosis=diagnosis,
                 last_visit=str(row[8]),
                 first_visit=str(row[9]),
@@ -76,6 +77,7 @@ async def main():
                 dep=dep,
             )
             await patient_crud.create_patient(patient_data)
+            print(i)
 
         wb.close()
 

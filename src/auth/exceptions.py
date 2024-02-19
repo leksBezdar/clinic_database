@@ -4,6 +4,10 @@ class InvalidAuthenthicationCredential(HTTPException):
     def __init__(self):
         super().__init__(status_code=401, detail="Invalid authenthication credentials")
         
+class Unauthorized(HTTPException):
+    def __init__(self):
+        super().__init__(status_code=401, detail="Unauthorized")  
+        
 class InvalidToken(HTTPException):
     def __init__(self):
         super().__init__(status_code=401, detail="Invalid token")

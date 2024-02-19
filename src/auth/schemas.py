@@ -53,6 +53,7 @@ class RefreshTokenUpdate(RefreshTokenCreate):
 class Token(BaseModel):
     access_token: str
     refresh_token: UUID
+    token_type: str = "Bearer"
     
 
 class LoginIn(BaseModel):

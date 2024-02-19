@@ -1,3 +1,4 @@
+from fastapi import Request, Response
 import jwt
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -53,19 +54,10 @@ class UserService:
     async def get_all_users(cls, *filter, offset: int, limit: int, **filter_by) -> list[models.User]:
 
         return await UserDAO.find_all(*filter, offset=offset, limit=limit, **filter_by)
-    
-    @classmethod
-    async def __check_if_superuser(cls, access_token: str):   
-         
-        user = await cls.get_user(token=access_token)
-        if not user.is_superuser:
-            raise exceptions.Forbidden
 
     @classmethod
-    async def set_superuser(cls, access_token: str, user_id: str) -> dict:
+    async def set_superuser(cls, user_id: str) -> dict:
         
-        await cls.__check_if_superuser(access_token)
-            
         return await cls.__set_superuser_db(user_id)
     
     @classmethod
@@ -79,9 +71,7 @@ class UserService:
         return {"Message": f"User {user_id} now has superuser status: {not(user.is_superuser)}"}
             
     @classmethod
-    async def delete_user(cls, access_token: str, user_id: uuid.UUID) -> dict:
-        
-        await cls.__check_if_superuser(access_token)
+    async def delete_user(cls, user_id: uuid.UUID) -> dict:
         
         return await cls.__set_user_inactive(user_id)
         
@@ -96,9 +86,7 @@ class UserService:
         return {"Message": f"User {user_id} was deleted successfuly"}
     
     @classmethod
-    async def delete_user_from_superuser(cls, access_token: str, user_id: uuid.UUID) -> dict:
-        
-        await cls.__check_if_superuser(access_token)
+    async def delete_user_from_superuser(cls, user_id: uuid.UUID) -> dict:
         
         await UserDAO.delete(models.User.id == user_id)
         return {"Message": f"Superuser deleted {user_id} successfuly"}
@@ -106,7 +94,7 @@ class UserService:
     @staticmethod
     async def _get_access_token_payload(access_token: str) -> uuid.UUID:
         try:
-            payload = jwt.decode(access_token,settings.TOKEN_SECRET_KEY, algorithms=[settings.ALGORITHM])
+            payload: dict = jwt.decode(access_token,settings.TOKEN_SECRET_KEY, algorithms=[settings.ALGORITHM])
             user_id = payload.get("sub")
             return user_id
 
@@ -137,7 +125,7 @@ class AuthService:
             )
         )
         
-        return schemas.Token(access_token=access_token, refresh_token=refresh_token)
+        return schemas.Token(access_token=access_token, refresh_token=refresh_token, token_type="Bearer")
     
     @staticmethod
     async def __create_access_token(user_id: uuid.UUID, **kwargs) -> str:
@@ -149,14 +137,18 @@ class AuthService:
         to_encode.update(**kwargs)
         encoded_jwt = jwt.encode(to_encode, settings.TOKEN_SECRET_KEY, algorithm=settings.ALGORITHM)
 
-        return encoded_jwt
+        return f"Bearer {encoded_jwt}"
     
     @classmethod
     async def __create_refresh_token(cls) -> uuid.UUID:
         return uuid.uuid4()
     
     @classmethod
-    async def refresh_token(cls, token: uuid.UUID) -> schemas.Token:
+    async def refresh_token(cls, response: Response, request: Request) -> schemas.Token:
+        
+        token = request.cookies.get("refresh_token")
+        if token is None:
+            raise exceptions.Unauthorized
         
         refresh_token = await RefreshTokenDAO.find_one_or_none(models.RefreshToken.refresh_token == token)
         if refresh_token is None:
@@ -164,6 +156,7 @@ class AuthService:
         
         if datetime.now(timezone.utc) >= refresh_token.created_at + timedelta(seconds=refresh_token.expires_in):
             await RefreshTokenDAO.delete(id=refresh_token.id)
+            await cls.__delete_tokens_from_cookie(response)
             raise exceptions.TokenExpired
         
         user = await UserDAO.find_one_or_none(id=refresh_token.user_id)
@@ -182,7 +175,7 @@ class AuthService:
             )
         )
         
-        return schemas.Token(access_token=access_token, refresh_token=new_refresh_token)
+        return schemas.Token(access_token=access_token, refresh_token=new_refresh_token, token_type="Bearer")
     
     @classmethod
     async def authenticate_user(cls, username: str, password: str) -> models.User:
@@ -194,13 +187,27 @@ class AuthService:
         raise exceptions.InvalidAuthenthicationCredential
     
     @classmethod
-    async def logout(cls, token: uuid.UUID) -> dict:
+    async def logout(cls, request: Request, response: Response) -> dict:
         
+        token = request.cookies.get("refresh_token")
+        if token is None:
+            raise exceptions.Unauthorized
+        
+        await cls.__delete_tokens_db(token)
+        await cls.__delete_tokens_from_cookie(response)
+        
+        return {"Message": "logout was successful"}
+    
+    @staticmethod
+    async def __delete_tokens_from_cookie(response: Response):
+        response.delete_cookie(key="access_token")   
+        response.delete_cookie(key="refresh_token")
+        
+    @staticmethod
+    async def __delete_tokens_db(token: uuid.UUID):
         refresh_token = await RefreshTokenDAO.find_one_or_none(models.RefreshToken.refresh_token == token)
         if refresh_token:
             await RefreshTokenDAO.delete(id=refresh_token.id)
-        
-        return {"Message": "logout was successful"}
     
     @classmethod
     async def abort_all_sessions(cls, user_id: uuid.UUID):

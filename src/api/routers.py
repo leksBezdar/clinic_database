@@ -2,6 +2,7 @@ import uuid
 from fastapi import APIRouter
 from . import schemas
 from .service import PatientManager
+from ..auth.dependencies import get_current_superuser, get_current_user
 
 router = APIRouter()
 
