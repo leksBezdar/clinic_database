@@ -25,7 +25,6 @@ class PatientCRUD:
     async def get_patient_records(self, access_token: str, patient_id, offset: int, limit: int, **filter_by) -> list[models.Patient]:
         
         therapist_id = await self._get_therapist_id_from_token(access_token)
-        
         patient_records = await PatientDAO.find_all(
             models.Patient.id==patient_id,
             offset=offset,

@@ -1,8 +1,5 @@
-from datetime import date
-
-from sqlalchemy import TIMESTAMP, ForeignKey
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import  Mapped, mapped_column
-from sqlalchemy.sql import func
 
 from ..database import Base
 

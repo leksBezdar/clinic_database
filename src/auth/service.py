@@ -53,26 +53,40 @@ class UserService:
     async def get_all_users(cls, *filter, offset: int, limit: int, **filter_by) -> list[models.User]:
 
         return await UserDAO.find_all(*filter, offset=offset, limit=limit, **filter_by)
+    
+    @classmethod
+    async def __check_if_superuser(cls, access_token: str):   
+         
+        user = await cls.get_user(token=access_token)
+        if not user.is_superuser:
+            raise exceptions.Forbidden
 
     @classmethod
     async def set_superuser(cls, access_token: str, user_id: str) -> dict:
         
-        superuser = await cls.get_user(token=access_token)
-        
-        if superuser.is_superuser:
+        await cls.__check_if_superuser(access_token)
             
-            user = await cls.get_user(user_id=user_id)     
-            if not user:
-                raise exceptions.UserDoesNotExist
-            
-            await UserDAO.update(models.User.id==user.id, obj_in={"is_superuser": not(user.is_superuser)})
-            
-            return {"Message": f"User {user_id} now has superuser status: {not(user.is_superuser)}"}
-        
-        raise exceptions.Forbidden
+        return await cls.__set_superuser_db(user_id)
     
     @classmethod
-    async def delete_user(cls, user_id: uuid.UUID) -> dict:
+    async def __set_superuser_db(cls, user_id: str) -> dict:
+    
+        user = await cls.get_user(user_id=user_id)     
+        if not user:
+            raise exceptions.UserDoesNotExist
+        
+        await UserDAO.update(models.User.id==user.id, obj_in={"is_superuser": not(user.is_superuser)})
+        return {"Message": f"User {user_id} now has superuser status: {not(user.is_superuser)}"}
+            
+    @classmethod
+    async def delete_user(cls, access_token: str, user_id: uuid.UUID) -> dict:
+        
+        await cls.__check_if_superuser(access_token)
+        
+        return await cls.__set_user_inactive(user_id)
+        
+    @classmethod
+    async def __set_user_inactive(cls, user_id: uuid.UUID) -> dict:
         
         db_user = await UserDAO.find_one_or_none(id=user_id)
         if db_user is None:
@@ -82,18 +96,15 @@ class UserService:
         return {"Message": f"User {user_id} was deleted successfuly"}
     
     @classmethod
-    async def delete_user_from_superuser(cls, token: str, user_id: uuid.UUID):
+    async def delete_user_from_superuser(cls, access_token: str, user_id: uuid.UUID) -> dict:
         
-        superuser_id = await cls._get_access_token_payload(access_token=token)
-        superuser = await cls.get_user(user_id=superuser_id)
-        if superuser.is_superuser:    
-            await UserDAO.delete(models.User.id == user_id)
-            return {"Message": f"Superuser {superuser_id} deleted {user_id} successfuly"}
+        await cls.__check_if_superuser(access_token)
         
-        raise exceptions.Forbidden
+        await UserDAO.delete(models.User.id == user_id)
+        return {"Message": f"Superuser deleted {user_id} successfuly"}
     
     @staticmethod
-    async def _get_access_token_payload(access_token: str):
+    async def _get_access_token_payload(access_token: str) -> uuid.UUID:
         try:
             payload = jwt.decode(access_token,settings.TOKEN_SECRET_KEY, algorithms=[settings.ALGORITHM])
             user_id = payload.get("sub")
@@ -111,17 +122,22 @@ class AuthService:
     @classmethod
     async def create_tokens(cls, user_id: uuid.UUID) -> schemas.Token:
         access_token = await cls.__create_access_token(user_id=user_id)
-        refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         refresh_token = await cls.__create_refresh_token()
+
+        return await cls.__create_tokens_db(user_id, access_token, refresh_token)
+
+    @staticmethod
+    async def __create_tokens_db(user_id: uuid.UUID, access_token: str, refresh_token: uuid.UUID) -> schemas.Token:
 
         await RefreshTokenDAO.add(
             schemas.RefreshTokenCreate(
                 user_id=user_id,
                 refresh_token=refresh_token,
-                expires_in=refresh_token_expires.total_seconds()
+                expires_in=timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS).total_seconds()
             )
         )
-        return schemas.Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
+        
+        return schemas.Token(access_token=access_token, refresh_token=refresh_token)
     
     @staticmethod
     async def __create_access_token(user_id: uuid.UUID, **kwargs) -> str:
@@ -133,7 +149,7 @@ class AuthService:
         to_encode.update(**kwargs)
         encoded_jwt = jwt.encode(to_encode, settings.TOKEN_SECRET_KEY, algorithm=settings.ALGORITHM)
 
-        return f'Bearer {encoded_jwt}'
+        return encoded_jwt
     
     @classmethod
     async def __create_refresh_token(cls) -> uuid.UUID:
@@ -166,7 +182,7 @@ class AuthService:
             )
         )
         
-        return schemas.Token(access_token=access_token, refresh_token=new_refresh_token, token_type="bearer")
+        return schemas.Token(access_token=access_token, refresh_token=new_refresh_token)
     
     @classmethod
     async def authenticate_user(cls, username: str, password: str) -> models.User:
