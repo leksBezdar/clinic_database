@@ -1,4 +1,5 @@
-from sqlalchemy import ForeignKey
+import uuid
+from sqlalchemy import UUID, ForeignKey
 from sqlalchemy.orm import  Mapped, mapped_column
 
 from ..database import Base
@@ -24,5 +25,5 @@ class Patient(Base):
     ischemia: Mapped[str] = mapped_column(nullable=False)
     dep: Mapped[str] = mapped_column(nullable=False)
     
-    therapist_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=True)
+    therapist_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id"), nullable=True)
 

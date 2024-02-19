@@ -36,4 +36,4 @@ class RefreshToken(Base):
     expires_in: Mapped[int]
     created_at: Mapped[datetime_tz_param]
     
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id", ondelete="CASCADE"))

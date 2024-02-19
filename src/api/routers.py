@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter
 from . import schemas
 from .service import PatientManager

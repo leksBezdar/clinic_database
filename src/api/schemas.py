@@ -1,4 +1,5 @@
 from datetime import date
+import uuid
 
 from pydantic import BaseModel
 
@@ -24,7 +25,7 @@ class PatientCreate(PatientBase):
   pass
 
 class PatientCreateDB(PatientCreate):
-  therapist_id: str
+  therapist_id: uuid.UUID
 
 class PatientUpdate(BaseModel):
   age: int | None = None 
@@ -44,7 +45,7 @@ class PatientUpdate(BaseModel):
   
 class Patient(PatientBase):
   id: int
-  therapist_id: str
+  therapist_id: uuid.UUID
   bp: str
   ischemia: str
   dep: str
