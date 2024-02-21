@@ -94,6 +94,7 @@ class UserService:
     @staticmethod
     async def _get_access_token_payload(access_token: str) -> uuid.UUID:
         try:
+            access_token = access_token.split()[1]
             payload: dict = jwt.decode(access_token,settings.TOKEN_SECRET_KEY, algorithms=[settings.ALGORITHM])
             user_id = payload.get("sub")
             return user_id
