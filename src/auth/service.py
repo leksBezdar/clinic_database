@@ -109,12 +109,32 @@ class UserService:
 class AuthService:
     
     @classmethod
-    async def create_tokens(cls, user_id: uuid.UUID) -> schemas.Token:
+    async def create_tokens(cls, user_id: uuid.UUID, response: Response) -> schemas.Token:
         access_token = await cls.__create_access_token(user_id=user_id)
-        refresh_token = await cls.__create_refresh_token()
+        refresh_token = await cls.__create_refresh_token()    
 
+        await cls.__set_tokens_in_cookie(response, access_token, refresh_token)
         return await cls.__create_tokens_db(user_id, access_token, refresh_token)
-
+    
+    @staticmethod
+    async def __set_tokens_in_cookie(response: Response, access_token: str, refresh_token: uuid.UUID) -> None:
+        response.set_cookie(
+            'access_token',
+            access_token,
+            max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            httponly=True,
+	        samesite="None",
+	        secure=True
+        )
+        response.set_cookie(
+            'refresh_token',
+            refresh_token,
+            max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 30 * 24 * 60,
+            httponly=True,
+	        samesite="None",
+	        secure=True
+        )
+    
     @staticmethod
     async def __create_tokens_db(user_id: uuid.UUID, access_token: str, refresh_token: uuid.UUID) -> schemas.Token:
 
@@ -145,9 +165,8 @@ class AuthService:
         return uuid.uuid4()
     
     @classmethod
-    async def refresh_token(cls, response: Response, request: Request) -> schemas.Token:
+    async def refresh_token(cls, response: Response, token: uuid.UUID) -> schemas.Token:
         
-        token = request.cookies.get("refresh_token")
         if token is None:
             raise exceptions.Unauthorized
         
@@ -167,6 +186,7 @@ class AuthService:
         access_token = await cls.__create_access_token(user.id)
         refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         new_refresh_token = await cls.__create_refresh_token()
+        await cls.__set_tokens_in_cookie(response, access_token, new_refresh_token)
         
         await RefreshTokenDAO.update(
             models.RefreshToken.id == refresh_token.id,
@@ -188,9 +208,8 @@ class AuthService:
         raise exceptions.InvalidAuthenthicationCredential
     
     @classmethod
-    async def logout(cls, request: Request, response: Response) -> dict:
+    async def logout(cls, token: uuid.UUID, response: Response) -> dict:
         
-        token = request.cookies.get("refresh_token")
         if token is None:
             raise exceptions.Unauthorized
         
@@ -201,8 +220,23 @@ class AuthService:
     
     @staticmethod
     async def __delete_tokens_from_cookie(response: Response):
-        response.delete_cookie(key="access_token")   
-        response.delete_cookie(key="refresh_token")
+        response.set_cookie(
+            'access_token',
+            'access_token',
+            max_age=0,
+            httponly=True,
+	        samesite="None",
+	        secure=True
+        )
+        
+        response.set_cookie(
+            'refresh_token',
+            'refresh_token',
+            max_age=0,
+            httponly=True,
+	        samesite="None",
+	        secure=True
+        )
         
     @staticmethod
     async def __delete_tokens_db(token: uuid.UUID):

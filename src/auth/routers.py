@@ -26,24 +26,7 @@ async def login(
     user: schemas.LoginIn
 ) -> schemas.LoginResponse:
     user = await AuthService.authenticate_user(user.username, user.password)
-    tokens = await AuthService.create_tokens(user.id)
-
-    response.set_cookie(
-        'access_token',
-        tokens.access_token,
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        httponly=True,
-	samesite="None",
-	secure=True
-    )
-    response.set_cookie(
-        'refresh_token',
-        tokens.refresh_token,
-        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 30 * 24 * 60,
-        httponly=True,
-	samesite="None",
-	secure=True
-    )
+    tokens = await AuthService.create_tokens(user.id, response)
 
     return {"user": user, "tokens": tokens}
 
@@ -53,7 +36,8 @@ async def logout(
     request: Request,
     response: Response
 ):
-    return await AuthService.logout(request, response)
+    token = request.cookies.get("refresh_token")
+    return await AuthService.logout(token, response)
 
 
 @auth_router.put("/refresh_token")
@@ -61,7 +45,8 @@ async def refresh_token(
     response: Response,
     request: Request
 ) -> schemas.Token:
-    return await AuthService.refresh_token(response, request)
+    token = request.cookies.get("refresh_token")
+    return await AuthService.refresh_token(response, token)
 
 
 @auth_router.delete("/abort_all_sessions")
