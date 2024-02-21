@@ -6,7 +6,7 @@ services:
       context: .
     env_file:
       - .env
-    container_name: fastapi_app
-    command: gunicorn src.main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker
+    container_name: fastapi_app_clinic
+    command: gunicorn src.main:app -b 0.0.0.0:8003 --workers 1 --worker-class uvicorn.workers.UvicornWorker
     ports:
-      - 9999:8000
+      - 8888:8003
