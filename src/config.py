@@ -26,6 +26,16 @@ class Settings(BaseSettings):
     @property
     def TEST_DATABASE_URL(self):
         return f"postgresql+asyncpg://{self.TEST_DB_USER}:{self.TEST_DB_PASS}@{self.TEST_DB_HOST}:{self.TEST_DB_PORT}/{self.TEST_DB_NAME}"
+    
+    PROD_DB_HOST: str
+    PROD_DB_PORT: str
+    PROD_DB_NAME: str
+    PROD_DB_USER: str
+    PROD_DB_PASS: str
+
+    @property
+    def PROD_DATABASE_URL(self):
+        return f"postgresql+asyncpg://{self.PROD_DB_USER}:{self.PROD_DB_PASS}@{self.PROD_DB_HOST}:{self.PROD_DB_PORT}/{self.PROD_DB_NAME}"
 
     TOKEN_SECRET_KEY: str
     ALGORITHM: str

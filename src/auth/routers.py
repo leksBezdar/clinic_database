@@ -19,6 +19,12 @@ async def registration(
 ) -> schemas.UserGet:
     return await UserService.create_user(user)
 
+@auth_router.post("/create_accounts", status_code=status.HTTP_201_CREATED)
+async def create_accounts(
+    user = Depends(get_current_superuser),
+    account_count: int = 1
+) -> list[schemas.UserCreate]:
+    return await UserService.create_user_accounts(account_count)
 
 @auth_router.post("/login")
 async def login(

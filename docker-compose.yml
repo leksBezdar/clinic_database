@@ -1,12 +1,29 @@
 version: "3.7"
 
 services:
+  db_clinic:
+    image: postgres:latest
+    container_name: db_app_clinic
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: clinic
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
   app:
     build:
       context: .
     env_file:
       - .env
     container_name: fastapi_app_clinic
-    command: gunicorn src.main:app -b 0.0.0.0:8003 --workers 1 --worker-class uvicorn.workers.UvicornWorker
+    command: bash -c "alembic upgrade head && gunicorn src.main:app -b 0.0.0.0:8003 --workers 1 --worker-class uvicorn.workers.UvicornWorker"
     ports:
       - 8888:8003
+    depends_on:
+      - db_clinic
+
+volumes:
+  postgres-data:

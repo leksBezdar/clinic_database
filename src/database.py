@@ -13,9 +13,12 @@ metadata = MetaData(naming_convention=DB_NAMING_CONVENTION)
 if settings.MODE == "TEST":
     DATABASE_URL = settings.TEST_DATABASE_URL
     DATABASE_PARAMS = {"poolclass": NullPool}
+elif settings.MODE == "PROD":
+    DATABASE_URL = settings.PROD_DATABASE_URL
+    DATABASE_PARAMS = {}
 else:
     DATABASE_URL = settings.DATABASE_URL
     DATABASE_PARAMS = {}
-
+    
 async_engine = create_async_engine(DATABASE_URL, **DATABASE_PARAMS)
 async_session_maker = async_sessionmaker(async_engine, expire_on_commit=False)
