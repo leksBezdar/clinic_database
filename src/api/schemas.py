@@ -5,7 +5,6 @@ from pydantic import BaseModel
 
 
 class PatientBase(BaseModel):
-  age: int
   birthday: str | None = None
   gender: str
   full_name: str
@@ -28,7 +27,6 @@ class PatientCreateDB(PatientCreate):
   therapist_id: uuid.UUID
 
 class PatientUpdate(BaseModel):
-  age: int | None = None 
   birthday: str | None = None 
   full_name: str | None = None 
   gender: str | None = None

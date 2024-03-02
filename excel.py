@@ -42,11 +42,6 @@ async def main():
                             file.write(str(birthday) + '    ' + str(e) + '    ' + '\n')
                             continue
 
-                if type(birthday_date) == dt.date and birthday_date != 0:
-                    age = datetime.now().year - birthday_date.year
-                else:
-                    age = 0
-
                 if diagnosis:
                     bp = "Да" if re.search(r'\bбп\b', diagnosis, flags=re.IGNORECASE) else "Нет"
                     ischemia = "Да" if re.search(r'\bишемия\b', diagnosis, flags=re.IGNORECASE) else "Нет"
@@ -58,7 +53,6 @@ async def main():
                     inhabited_locality = "Город" if living_place.startswith(('г', 'Г')) else "Село"
 
                 patient_data = schemas.PatientCreate(
-                    age=age,
                     birthday=str(birthday_date),
                     gender=row[1],
                     full_name=row[0],

@@ -9,7 +9,6 @@ class Patient(Base):
     __tablename__ = "patients"
     
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    age: Mapped[int] = mapped_column(nullable=True)
     gender: Mapped[str] = mapped_column(nullable=False)
     birthday: Mapped[str] = mapped_column(nullable=True)
     full_name: Mapped[str] = mapped_column(nullable=False)
