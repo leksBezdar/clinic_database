@@ -47,3 +47,18 @@ class Patient(PatientBase):
   bp: str
   ischemia: str
   dep: str
+
+
+class ExplorerPatientDTO(BaseModel):
+  id: int 
+  therapist_id: uuid.UUID
+  gender: str
+  inhabited_locality: str | None = None
+  diagnosis: str | None = None
+  treatment: str | None = None
+  bp: str = "Нет"
+  ischemia: str = "Нет"
+  dep: str = "Нет"
+
+  class Config:
+    from_attributes = True

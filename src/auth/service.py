@@ -21,23 +21,24 @@ class UserService:
         return await cls.__create_db_user(user=user)
     
     @classmethod
-    async def create_user_accounts(cls, account_count: int) -> list[models.User]:
+    async def create_user_accounts(cls, account_count: int, default_role: str) -> list[models.User]:
        
         user_list = []
         
         for _ in range(account_count):
-            user_account_data = await cls.__generate_user_account_data()
+            user_account_data = await cls.__generate_user_account_data(default_role)
             user_list.append(user_account_data)
             await cls.create_user(user_account_data)
         
         return user_list
             
     @staticmethod
-    async def __generate_user_account_data() -> schemas.UserCreate:
+    async def __generate_user_account_data(default_role: str) -> schemas.UserCreate:
         
         return schemas.UserCreate(
             username=await utils.get_random_string(10),
             password=await utils.get_random_string(10),
+            role=default_role,
             is_superuser=False,
             is_active=True
         )

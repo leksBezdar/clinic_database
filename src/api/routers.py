@@ -33,7 +33,7 @@ async def get_patient_records(
         patient_id=patient_id, user=user,
         limit=limit, offset=offset)
     
-@router.get("/get_all_patient_records", response_model=list[schemas.Patient])
+@router.get("/get_all_patient_records")
 async def get_all_patient_records(
 	user: User = Depends(get_current_user), 
     limit: int = 1000,
