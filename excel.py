@@ -70,7 +70,7 @@ async def main():
 
                 patient_data_json = patient_data.model_dump()
 
-                async with session.post('https://clinic.universal-hub.site/create_patient_record', json=patient_data_json) as response:
+                async with session.post('http://clinic.universal-hub.site/create_patient_record', json=patient_data_json) as response:
                     print(f"Response status for patient {i}: {response.status}")
 
         wb.close()

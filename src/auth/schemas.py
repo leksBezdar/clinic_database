@@ -1,10 +1,16 @@
+from enum import Enum
 from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 from ..config import settings
 
 
+class UserRole(str, Enum):
+    therapist = "therapist"
+    explorer = "explorer"
+
 class UserBase(BaseModel):
     username: str
+    role: UserRole
     is_superuser: bool = Field(False)
     is_active: bool = Field(True)
 
@@ -31,6 +37,7 @@ class UserCreateDB(UserBase):
 
 class UserUpdate(BaseModel):
     username: str | None = None
+    role: UserRole | None = None
     hashed_password: str | None = None
     is_superuser: bool | None = None
     

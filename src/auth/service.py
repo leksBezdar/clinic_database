@@ -83,6 +83,11 @@ class UserService:
         return await cls.__set_superuser_db(user_id)
     
     @classmethod
+    async def set_user_role(cls, user_id: str, new_role: str) -> dict:
+        
+        return await cls.__set_user_role(user_id, new_role)
+    
+    @classmethod
     async def __set_superuser_db(cls, user_id: str) -> dict:
     
         user = await cls.get_user(user_id=user_id)     
@@ -91,6 +96,16 @@ class UserService:
         
         await UserDAO.update(models.User.id==user.id, obj_in={"is_superuser": not(user.is_superuser)})
         return {"Message": f"User {user_id} now has superuser status: {not(user.is_superuser)}"}
+    
+    @classmethod
+    async def __set_user_role(cls, user_id: str, new_role: str) -> dict:
+    
+        user = await cls.get_user(user_id=user_id)     
+        if not user:
+            raise exceptions.UserDoesNotExist
+        
+        await UserDAO.update(models.User.id==user.id, obj_in={"role": new_role})
+        return {"Message": f"User {user_id} now has role {new_role}"}
             
     @classmethod
     async def delete_user(cls, user_id: uuid.UUID) -> dict:

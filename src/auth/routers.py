@@ -80,10 +80,19 @@ async def get_all_users(
 
 @user_router.patch("/set_superuser")
 async def set_superuser(
-    user_id: str,    
+    user_id: str,
+    new_role: str,    
     superuser: User = Depends(get_current_superuser),
 ) -> dict:
     return await UserService.set_superuser(user_id=user_id)
+
+@user_router.patch("/set_user_role")
+async def set_user_role(
+    user_id: str,
+    new_role: schemas.UserRole,    
+    superuser: User = Depends(get_current_superuser),
+) -> dict:
+    return await UserService.set_user_role(user_id=user_id, new_role=new_role)
 
 @user_router.delete("/delete_user")
 async def delete_user(
