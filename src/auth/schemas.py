@@ -66,7 +66,3 @@ class Token(BaseModel):
 class LoginIn(BaseModel):
     username: str
     password: str    
-
-class LoginResponse(BaseModel):
-    user: UserGet
-    tokens: Token

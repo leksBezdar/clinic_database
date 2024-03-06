@@ -3,11 +3,10 @@ from fastapi import APIRouter, Depends, Request, Response, status
 
 from . import schemas
 
-from .dependencies import get_current_superuser
+from .dependencies import get_current_superuser, get_current_user
 from .models import User
 from .service import UserService, AuthService
 
-from ..config import settings
 
 auth_router = APIRouter(prefix="/auth")
 user_router = APIRouter(prefix="/users")
@@ -31,12 +30,8 @@ async def create_accounts(
 async def login(
     response: Response,
     user: schemas.LoginIn
-) -> schemas.LoginResponse:
-    user = await AuthService.authenticate_user(user.username, user.password)
-    tokens = await AuthService.create_tokens(user.id, response)
-
-    return {"user": user, "tokens": tokens}
-
+) -> schemas.UserGet:
+    return await AuthService.authenticate_user(user.username, user.password, response)
 
 @auth_router.post("/logout")
 async def logout(
@@ -46,7 +41,6 @@ async def logout(
     token = request.cookies.get("refresh_token")
     return await AuthService.logout(token, response)
 
-
 @auth_router.put("/refresh_token")
 async def refresh_token(
     response: Response,
@@ -55,13 +49,17 @@ async def refresh_token(
     token = request.cookies.get("refresh_token")
     return await AuthService.refresh_token(response, token)
 
-
 @auth_router.delete("/abort_all_sessions")
 async def abort_all_sessions(
     user_id: str, 
 ) -> dict:
     return await AuthService.abort_all_sessions(user_id)
 
+@user_router.get("/me", response_model=schemas.UserGet)
+async def get_me(
+    user: User = Depends(get_current_user)
+):
+    return user
 
 @user_router.get("/get_user")
 async def get_user(
@@ -82,7 +80,6 @@ async def get_all_users(
 @user_router.patch("/set_superuser")
 async def set_superuser(
     user_id: str,
-    new_role: str,    
     superuser: User = Depends(get_current_superuser),
 ) -> dict:
     return await UserService.set_superuser(user_id=user_id)

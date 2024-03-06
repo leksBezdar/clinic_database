@@ -237,10 +237,12 @@ class AuthService:
         return schemas.Token(access_token=access_token, refresh_token=new_refresh_token, token_type="Bearer")
     
     @classmethod
-    async def authenticate_user(cls, username: str, password: str) -> models.User:
+    async def authenticate_user(cls, username: str, password: str, response: Response) -> models.User:
         
         user = await UserDAO.find_one_or_none(username=username)
         if user and await utils.validate_password(password, user.hashed_password):
+            await cls.create_tokens(user.id, response)
+            print(user.id,  user.role, user.username)
             return user
         
         raise exceptions.InvalidAuthenthicationCredential

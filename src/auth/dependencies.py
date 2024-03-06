@@ -23,7 +23,8 @@ async def get_current_user(
     except Exception:
         raise exceptions.InvalidToken
     current_user = await UserService.get_user(uuid.UUID(user_id))
-    
+    if not current_user.is_active:
+        raise exceptions.Forbidden
     return current_user
 
 

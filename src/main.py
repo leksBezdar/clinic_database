@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.auth.routers import auth_router, user_router
-from src.api.routers import router as api_router
+from src.api.routers import api_router
 
 from .config import settings
 

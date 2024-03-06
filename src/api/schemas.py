@@ -62,3 +62,10 @@ class ExplorerPatientDTO(BaseModel):
 
   class Config:
     from_attributes = True
+      
+class GetAllPatientRecordsExample(BaseModel):
+  explorer_role: str = "explorer"
+  explorer_response: list[ExplorerPatientDTO]
+  therapist_role: str = "therapist"
+  therapist_response: list[Patient]
+  

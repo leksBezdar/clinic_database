@@ -1,61 +1,78 @@
-from . import schemas, models
+from . import schemas, models, exceptions
 from .dao import PatientDAO
 
-from ..auth.service import AuthService, UserService
 from ..auth.models import User
+from ..auth.schemas import UserRole
 
 
-class PatientCRUD:
+class PatientService:
 
-    async def create_patient(self, patient_data: schemas.PatientCreate, user: User) -> models.Patient:
-
-        db_patient = await PatientDAO.add(
-            schemas.PatientCreateDB(
-                therapist_id=user.id,
-                **patient_data.model_dump(),
-            ))
-
-        return db_patient
-
-    async def get_patient_records(self, user: User, patient_id, offset: int, limit: int, **filter_by) -> list[models.Patient]:
+    @classmethod
+    async def create_patient(cls, patient_data: schemas.PatientCreate, user: User) -> models.Patient:
         
-        patient_records = await PatientDAO.find_all(
-            models.Patient.id==patient_id,
-            offset=offset,
-            limit=limit
-        )   
+        if user.role == UserRole.therapist.value:
+            db_patient = await PatientDAO.add(
+                schemas.PatientCreateDB(
+                    therapist_id=user.id,
+                    **patient_data.model_dump(),
+                ))
+            
+            return db_patient
         
-        return patient_records
-        
-    async def get_all_patient_records(self, *filter, user: User, offset: int, limit: int, **filter_by) -> list[models.Patient]:
-        
-        patient_records = await PatientDAO.find_all(*filter, offset=offset, limit=limit, **filter_by)
+        raise exceptions.Forbidden
 
-        formatted_patient_data = await self.__format_patient_data(user=user, patient_records=patient_records)
+    # @classmethod
+    # async def get_patient_records(cls, user: User, patient_id, offset: int, limit: int, **filter_by) -> list[models.Patient]:
         
-        return formatted_patient_data
+    #     patient_records = await PatientDAO.find_all(
+    #         models.Patient.id==patient_id,
+    #         offset=offset,
+    #         limit=limit
+    #     )   
+        
+    #     formatted_patient_data = await cls.__format_patient_data(user=user, patient_records=patient_records) 
+    #     return formatted_patient_data
+        
+    @classmethod
+    async def get_all_patient_records(cls, *filter, user: User, offset: int, limit: int, **filter_by) -> list[models.Patient]:
+        
+        if user.role in [role.value for role in list(UserRole)]:
+        
+            patient_records = await PatientDAO.find_all(*filter, offset=offset, limit=limit, **filter_by)
+            formatted_patient_data = await cls.__format_patient_data(user=user, patient_records=patient_records)
+
+            return formatted_patient_data
+        
+        raise exceptions.Forbidden
     
-    async def update_patient_record(self, user: User, patient_id: int, patient_in: schemas.PatientUpdate) -> models.Patient:
+    @classmethod
+    async def update_patient_record(cls, user: User, patient_id: int, patient_in: schemas.PatientUpdate) -> models.Patient:
         
-        patient_record = await PatientDAO.update(models.Patient.id==patient_id, obj_in=patient_in)
-
-        return patient_record
+        if user.role == UserRole.therapist.value:  
+            patient_record = await PatientDAO.update(models.Patient.id==patient_id, obj_in=patient_in)
+            return patient_record
+        
+        raise exceptions.Forbidden
     
-    async def delete_patient_record(self, user: User, patient_id: int) -> dict:
+    @classmethod
+    async def delete_patient_record(cls, user: User, patient_id: int) -> dict:
         
-        await PatientDAO.delete(models.Patient.id==patient_id)
+        if user.role == "therapist": 
+            await PatientDAO.delete(models.Patient.id==patient_id)
+            return {"Message": f"Therapist {user.id} deleted pathient record {patient_id} successfully"}
         
-        return {"Message": f"Therapist {user.id} deleted pathient record {patient_id} successfully"}
+        raise exceptions.Forbidden
 
-    async def __format_patient_data(self, user: User, patient_records: list[models.Patient]) -> list:
+    @classmethod
+    async def __format_patient_data(cls, user: User, patient_records: list[models.Patient]) -> list:
 
         if user.role == "therapist":
-            print(1)
             return patient_records
         elif user.role == "explorer":
-            return await self.__format_patient_data_for_explorer(patient_records)
+            return await cls.__format_patient_data_for_explorer(patient_records)
 
-    async def __format_patient_data_for_explorer(self, patient_records: list[models.Patient]) -> list:
+    @staticmethod
+    async def __format_patient_data_for_explorer(patient_records: list[models.Patient]) -> list:
         formatted_patient_records = []
     
         for patient in patient_records:
@@ -74,8 +91,5 @@ class PatientCRUD:
             }
     
             formatted_patient_records.append(schemas.ExplorerPatientDTO(**patient_data))
-            return formatted_patient_records
-
-class PatientManager:
-    def __init__(self):
-        self.patient_crud = PatientCRUD()
+            
+        return formatted_patient_records
