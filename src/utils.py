@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 

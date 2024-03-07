@@ -40,7 +40,10 @@ class UserUpdate(BaseModel):
     role: UserRole | None = None
     hashed_password: str | None = None
     is_superuser: bool | None = None
-    
+
+class ChangeUserPassword(BaseModel):
+    old_password: str
+    new_password: str
 
 class UserGet(UserBase):
     id: UUID

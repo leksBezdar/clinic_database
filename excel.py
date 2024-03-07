@@ -6,12 +6,33 @@ import openpyxl
 from datetime import datetime
 from types import NoneType
 import datetime as dt
-from src.api.service import PatientManager
-from src.api import schemas
+
+from pydantic import BaseModel
+# from src.api.service import PatientManager
+# from src.api import schemas
 
 async def main():
-    patient_manager = PatientManager()
-    patient_crud = patient_manager.patient_crud
+    # patient_manager = PatientManager()
+    # patient_crud = patient_manager.patient_crud
+    
+    class PatientBase(BaseModel):
+        birthday: str | None = None
+        gender: str
+        full_name: str
+        living_place: str | None = None
+        job_title: str | None = None
+        inhabited_locality: str | None = None
+        diagnosis: str | None = None
+        first_visit: str | None = None
+        last_visit: str | None = None
+        treatment: str | None = None
+        bp: str = "Нет"
+        ischemia: str = "Нет"
+        dep: str = "Нет"
+
+
+    class PatientCreate(PatientBase):
+      pass
 
     async def process_excel_file(file_path):
         wb = openpyxl.load_workbook(file_path)
@@ -52,7 +73,7 @@ async def main():
                     living_place = living_place.strip()
                     inhabited_locality = "Город" if living_place.startswith(('г', 'Г')) else "Село"
 
-                patient_data = schemas.PatientCreate(
+                patient_data = PatientCreate(
                     birthday=str(birthday_date),
                     gender=row[1],
                     full_name=row[0],
@@ -70,8 +91,8 @@ async def main():
 
                 patient_data_json = patient_data.model_dump()
 
-                async with session.post('http://clinic.universal-hub.site/create_patient_record', json=patient_data_json) as response:
-                    print(f"Response status for patient {i}: {response.status}")
+                async with session.post('https://clinic.universal-hub.site/create_patient_record', json=patient_data_json) as response:
+                    print(f"Response status for patient {i}: {response.status}, {response.text}")
 
         wb.close()
 

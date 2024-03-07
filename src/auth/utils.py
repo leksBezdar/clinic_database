@@ -65,14 +65,14 @@ async def validate_password(password: str, hashed_password: str) -> None:
     """
     salt, hashed = hashed_password.split(settings.PASSWORD_SALT_SEPARATOR)
 
-    if not await hash_password(password, salt) == hashed:
+    if not await __hash_password(password, salt) == hashed:
         raise exceptions.InvalidAuthenthicationCredential
     
     return {"Message": "Password is valid"}
 
 
 
-async def hash_password(password: str, salt: str = None) -> str:
+async def __hash_password(password: str, salt: str = None) -> str:
     """Hashes a password using salt and hashlib.
 
     Args:
@@ -100,7 +100,7 @@ async def get_hashed_password(password: str) -> str:
         str: The hashed password with salt appended.
     """
     salt = await get_random_string()
-    hashed_password = await hash_password(password, salt)
+    hashed_password = await __hash_password(password, salt)
     
     return f"{salt}${hashed_password}"
 

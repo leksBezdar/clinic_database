@@ -92,16 +92,23 @@ async def set_user_role(
 ) -> dict:
     return await UserService.set_user_role(user_id=user_id, new_role=new_role)
 
+@user_router.patch("/change_password")
+async def change_password(
+    password: schemas.ChangeUserPassword,
+    user: User = Depends(get_current_user)
+) -> dict:
+    return await UserService.change_password(user, password)
+
+@user_router.delete("/deactivate_user")
+async def deactivate_user(
+    user_id: str,
+    superuser: User = Depends(get_current_superuser)
+) -> dict:
+    return await UserService.deactivate_user_account(user_id=user_id)
+
 @user_router.delete("/delete_user")
 async def delete_user(
     user_id: str,
     superuser: User = Depends(get_current_superuser)
 ) -> dict:
     return await UserService.delete_user(user_id=user_id)
-
-@user_router.delete("/delete_user_from_superuser")
-async def delete_user_from_superuser(
-    user_id: str,
-    superuser: User = Depends(get_current_superuser)
-) -> dict:
-    return await UserService.delete_user_from_superuser(user_id=user_id)

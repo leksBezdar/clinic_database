@@ -10,7 +10,8 @@ from alembic import context
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from src.auth.models import User, RefreshToken
-from src.api.models import Patient
+from src.patient.models import Patient
+from src.patient_records.models import PatientRecord
 from src.database import Base
 from src.config import settings
 

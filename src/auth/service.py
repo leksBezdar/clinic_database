@@ -107,9 +107,18 @@ class UserService:
         
         await UserDAO.update(models.User.id==user.id, obj_in={"role": new_role})
         return {"Message": f"User {user_id} now has role {new_role}"}
+    
+    @classmethod
+    async def change_password(cls, user: models.User, password: schemas.ChangeUserPassword) -> dict:
+        
+        await utils.validate_password(password.old_password, user.hashed_password)
+        new_hashed_password = await utils.get_hashed_password(password.new_password)
+        
+        await UserDAO.update(models.User.id==user.id, obj_in={"hashed_password": new_hashed_password})
+        return {"message": "Пароль был изменен успешно"}
             
     @classmethod
-    async def delete_user(cls, user_id: uuid.UUID) -> dict:
+    async def deactivate_user_account(cls, user_id: uuid.UUID) -> dict:
         
         return await cls.__set_user_inactive(user_id)
         
@@ -124,7 +133,7 @@ class UserService:
         return {"Message": f"User {user_id} was deleted successfuly"}
     
     @classmethod
-    async def delete_user_from_superuser(cls, user_id: uuid.UUID) -> dict:
+    async def delete_user(cls, user_id: uuid.UUID) -> dict:
         
         await UserDAO.delete(models.User.id == user_id)
         return {"Message": f"Superuser deleted {user_id} successfuly"}
@@ -242,7 +251,6 @@ class AuthService:
         user = await UserDAO.find_one_or_none(username=username)
         if user and await utils.validate_password(password, user.hashed_password):
             await cls.create_tokens(user.id, response)
-            print(user.id,  user.role, user.username)
             return user
         
         raise exceptions.InvalidAuthenthicationCredential

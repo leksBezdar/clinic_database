@@ -1,11 +1,33 @@
+from loguru import logger
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.auth.routers import auth_router, user_router
-from src.api.routers import api_router
+from src.patient_records.routers import patient_records_router
+from src.patient.routers import patient_router
 
 from .config import settings
+
+
+logger.add(
+    "critical_logs.log",
+    format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
+    encoding="utf-8",       
+    level="CRITICAL",
+    filter=lambda record: record["level"].name == "CRITICAL"
+)
+
+logger.add(
+    "common_logs.log",
+    format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
+    encoding="utf-8",
+    rotation="500 MB",
+    retention="7 days",
+    level="INFO",
+    filter=lambda record: record["level"].name == "INFO"
+)
 
 
 app = FastAPI()
@@ -22,7 +44,8 @@ app.add_middleware(
 
 app.include_router(auth_router, tags=["AUTH"])
 app.include_router(user_router, tags=["USER"])
-app.include_router(api_router, tags=["API"])
+app.include_router(patient_router, tags=["PATIENT"])
+app.include_router(patient_records_router, tags=["PATIENT RECORDS"])
 
 
 @app.get("/", response_class=HTMLResponse)
