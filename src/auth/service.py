@@ -39,8 +39,6 @@ class UserService:
             username=await utils.get_random_string(10),
             password=await utils.get_random_string(10),
             role=default_role,
-            is_superuser=False,
-            is_active=True
         )
      
     @staticmethod

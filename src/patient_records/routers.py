@@ -17,14 +17,15 @@ async def create_patient_record(
 ):
     return await PatientRecordsService.create_patient_record(patient_record_data=patient_record_data, user=user)
 
-@patient_records_router.get("/get_one_patient_record", response_model=schemas.PatientRecords | None)
+@patient_records_router.get("/get_one_patient_record", response_model=schemas.PatientRecords | schemas.ExplorerPatientDTO | None)
 async def get_one_patient_record(
+    patient_id: str,
     patient_record_id: str, 
     user: User = Depends(get_current_user)
 ):
-    return await PatientRecordsService.get_one_patient_record(user=user, patient_record_id=patient_record_id)
+    return await PatientRecordsService.get_one_patient_record(user=user, patient_id=patient_id, patient_record_id=patient_record_id)
 
-@patient_records_router.get("/get_patient_records", response_model=list[schemas.PatientRecords] | None)
+@patient_records_router.get("/get_patient_records", response_model=list[schemas.PatientRecords] | list[schemas.ExplorerPatientDTO])
 async def get_patient_records(
     patient_id: str,
     limit: int = 100,

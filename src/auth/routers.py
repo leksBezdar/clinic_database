@@ -77,13 +77,6 @@ async def get_all_users(
 ) -> list[schemas.UserGet]:
     return await UserService.get_all_users(is_active=is_active, offset=offset, limit=limit)
 
-@user_router.patch("/set_superuser")
-async def set_superuser(
-    user_id: str,
-    superuser: User = Depends(get_current_superuser),
-) -> dict:
-    return await UserService.set_superuser(user_id=user_id)
-
 @user_router.patch("/set_user_role")
 async def set_user_role(
     user_id: str,

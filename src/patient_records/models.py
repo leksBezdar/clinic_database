@@ -15,8 +15,7 @@ class PatientRecord(Base):
     
     id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True, index=True, default=uuid.uuid4)
     diagnosis: Mapped[str_null]
-    first_visit: Mapped[str_null]
-    last_visit: Mapped[str_null]
+    visit: Mapped[str]
     treatment: Mapped[str_null]
     
     bp: Mapped[str_not_null]

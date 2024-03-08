@@ -1,12 +1,10 @@
-from datetime import date
 import uuid
 
 from pydantic import BaseModel
 
   
 class PatientRecordsBase(BaseModel):
-  first_visit: str | None = None
-  last_visit: str | None = None
+  visit: str | None = None
   
   diagnosis: str | None = None
   treatment: str | None = None
@@ -29,8 +27,7 @@ class PatientRecords(PatientRecordsBase):
     from_attributes = True
 
 class PatientRecordsUpdate(BaseModel):
-  first_visit: str | None = None
-  last_visit: str | None = None
+  visit: str | None = None
   
   diagnosis: str | None = None
   treatment: str | None = None
@@ -40,8 +37,9 @@ class PatientRecordsUpdate(BaseModel):
   
 
 class ExplorerPatientDTO(BaseModel):
-  id: int 
-  therapist_id: uuid.UUID
+  birthday: str
+  gender: str
+  inhabited_locality: str | None = None
   diagnosis: str | None = None
   treatment: str | None = None
   bp: str = "Нет"
@@ -50,4 +48,3 @@ class ExplorerPatientDTO(BaseModel):
 
   class Config:
     from_attributes = True
-  

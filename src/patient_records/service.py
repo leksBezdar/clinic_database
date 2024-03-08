@@ -2,11 +2,15 @@ import uuid
 from loguru import logger
 from sqlalchemy import and_
 
+
 from . import schemas, models, exceptions
 from .dao import PatientRecordsDAO
 
 from ..auth.models import User
 from ..auth.schemas import UserRole
+from ..patient.dao import PatientDAO
+from ..patient.models import Patient
+from ..patient.service import PatientService
 
 
 class PatientRecordsService:               
@@ -46,17 +50,19 @@ class PatientRecordsService:
             logger.opt(exception=e).critical(f"Unexpected error in method PatientService.get_patient_records: {e}")
     
     @classmethod        
-    async def get_one_patient_record(cls, user: User, patient_record_id: uuid.UUID, **filter_by) -> models.PatientRecord:
+    async def get_one_patient_record(cls, user: User, patient_id: uuid.UUID, patient_record_id: uuid.UUID, **filter_by) -> models.PatientRecord:
         try: 
             logger.info(f"User {user.username} with role {user.role} retrieves data about patient record {patient_record_id}")
             patient_record = await PatientRecordsDAO.find_one_or_none(
                 and_(
-                    models.PatientRecord.patient_id==patient_record_id,
+                    models.PatientRecord.patient_id==patient_id,
                     models.PatientRecord.id==patient_record_id
                     )
                 )
             if patient_record:
-                return await cls.__format_patient_data(user=user, patient_records=list(patient_record))
+                list_patient_record = []
+                list_patient_record.append(patient_record)
+                return await cls.__format_patient_data(user=user, patient_records=list_patient_record)
             return None
         
         except Exception as e:
@@ -124,7 +130,7 @@ class PatientRecordsService:
             logger.info(f"Formatting data for user {user.username} with role {user.role}")
             if user.role == UserRole.therapist.value:
                 return patient_records
-            elif user.role == UserRole.explorer.value                                                    :
+            elif user.role == UserRole.explorer.value:
                 return await cls.__format_patient_data_for_explorer(patient_records)
             
             else: 
@@ -134,30 +140,40 @@ class PatientRecordsService:
         except Exception as e:
             logger.opt(exception=e).critical(f"Unexpected error in method PatientService.__format_patient_data method: {e}")
 
-    @staticmethod
-    async def __format_patient_data_for_explorer(patient_records: list[models.PatientRecord]) -> list:
-        try:
-            
+    @classmethod
+    async def __format_patient_data_for_explorer(cls, patient_records: list[models.PatientRecord]) -> list:
+        try: 
             formatted_patient_records = []
-        
-            for patient in patient_records:
-                patient_dict = patient.__dict__
-        
-                patient_data = {
-                    "id": patient_dict.get("id"),
-                    "therapist_id": patient_dict.get("therapist_id"),
-                    "diagnosis": patient_dict.get("diagnosis"),
-                    "treatment": patient_dict.get("treatment"),
-                    "bp": patient_dict.get("bp"),
-                    "ischemia": patient_dict.get("ischemia"),
-                    "dep": patient_dict.get("dep")
-                }
-        
-                formatted_patient_records.append(schemas.ExplorerPatientDTO(**patient_data))
-            
-            logger.info(f"Returning formatted data for user with explorer role")    
+
+            for patient_record in patient_records:                          
+                formatted_record = await cls.__get_data_into_explorer_dto_scheme(patient_record=patient_record)
                 
+                if len(patient_records) == 1:
+                    return formatted_record
+
+                formatted_patient_records.append(formatted_record)
+                
+            logger.info(f"Returning formatted data for user with explorer role")        
             return formatted_patient_records
         
         except Exception as e:
             logger.opt(exception=e).critical(f"Unexpected error in method PatientService.__format_patient_data_for_explorer method: {e}")
+            
+    @staticmethod
+    async def __get_data_into_explorer_dto_scheme(patient_record: schemas.PatientRecords) -> schemas.ExplorerPatientDTO:
+        
+        patient = await PatientDAO.find_one_or_none(Patient.id==patient_record.patient_id)
+        patient_record_dict = patient_record.__dict__
+        
+        patient_data = {
+            "birthday": patient.birthday,
+            "gender": patient.gender,
+            "inhabited_locality": patient.inhabited_locality,
+            "diagnosis": patient_record_dict.get("diagnosis"),
+            "treatment": patient_record_dict.get("treatment"),
+            "bp": patient_record_dict.get("bp"),
+            "ischemia": patient_record_dict.get("ischemia"),
+            "dep": patient_record_dict.get("dep")
+        }
+
+        return schemas.ExplorerPatientDTO(**patient_data)

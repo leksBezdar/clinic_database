@@ -1,6 +1,6 @@
 from enum import Enum
 from uuid import UUID
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, computed_field, field_validator
 from ..config import settings
 
 
@@ -11,8 +11,6 @@ class UserRole(str, Enum):
 class UserBase(BaseModel):
     username: str
     role: UserRole
-    is_superuser: bool = Field(False)
-    is_active: bool = Field(True)
 
 class UserCreate(UserBase):
     username: str
@@ -39,7 +37,6 @@ class UserUpdate(BaseModel):
     username: str | None = None
     role: UserRole | None = None
     hashed_password: str | None = None
-    is_superuser: bool | None = None
 
 class ChangeUserPassword(BaseModel):
     old_password: str
@@ -47,6 +44,8 @@ class ChangeUserPassword(BaseModel):
 
 class UserGet(UserBase):
     id: UUID
+    is_superuser: bool
+    is_active: bool
 
     class Config:
         from_attributes = True
