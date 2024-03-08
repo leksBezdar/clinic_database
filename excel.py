@@ -1,3 +1,5 @@
+import time
+import uuid
 import aiohttp
 import asyncio
 import json
@@ -16,23 +18,30 @@ async def main():
     # patient_crud = patient_manager.patient_crud
     
     class PatientBase(BaseModel):
-        birthday: str | None = None
-        gender: str
-        full_name: str
-        living_place: str | None = None
-        job_title: str | None = None
-        inhabited_locality: str | None = None
-        diagnosis: str | None = None
+      id: uuid.UUID | str
+      birthday: str | None = None
+      gender: str
+      full_name: str
+      living_place: str | None = None
+      job_title: str | None = None
+      inhabited_locality: str | None = None
+
+        
+    class PatientRecordsBase(BaseModel):
         first_visit: str | None = None
         last_visit: str | None = None
+        
+        diagnosis: str | None = None
         treatment: str | None = None
         bp: str = "Нет"
         ischemia: str = "Нет"
         dep: str = "Нет"
-
-
-    class PatientCreate(PatientBase):
-      pass
+        
+        patient_id: uuid.UUID | str
+        
+        
+    class PatientRecordsCreateDB(PatientRecordsBase):
+        therapist_id: uuid.UUID | str = "305ff407-abd1-4ed1-81ef-c76d2622bcfe"
 
     async def process_excel_file(file_path):
         wb = openpyxl.load_workbook(file_path)
@@ -41,6 +50,9 @@ async def main():
         async with aiohttp.ClientSession() as session:
             i = 0
             for row in sheet.iter_rows(min_row=2, max_row=5337, values_only=True):
+                
+                patient_id = str(uuid.uuid4())
+                
                 i += 1
                 birthday = row[2]
                 diagnosis = row[7]
@@ -72,14 +84,20 @@ async def main():
                 if living_place:
                     living_place = living_place.strip()
                     inhabited_locality = "Город" if living_place.startswith(('г', 'Г')) else "Село"
-
-                patient_data = PatientCreate(
+                    
+                    
+                patient_data = PatientBase(
+                    id=str(patient_id),
                     birthday=str(birthday_date),
                     gender=row[1],
                     full_name=row[0],
                     living_place=living_place,
                     job_title=row[6],
                     inhabited_locality=inhabited_locality,
+                )
+                
+                
+                patient_record_data = PatientRecordsCreateDB(
                     diagnosis=diagnosis,
                     last_visit=str(row[8]),
                     first_visit=str(row[9]),
@@ -87,13 +105,23 @@ async def main():
                     bp=bp,
                     ischemia=ischemia,
                     dep=dep,
+                    
+                    patient_id=str(patient_id),
                 )
+                
 
                 patient_data_json = patient_data.model_dump()
-
-                async with session.post('https://clinic.universal-hub.site/create_patient_record', json=patient_data_json) as response:
+                patient_record_data_json = patient_record_data.model_dump()
+                
+                async with session.post("https://clinic.universal-hub.site/patient_router/create_patient", json=patient_data_json) as response:
+                    await response.read()
                     print(f"Response status for patient {i}: {response.status}, {response.text}")
-
+                    ...
+                async with session.post('https://clinic.universal-hub.site/patient_records_router/create_patient_record', json=patient_record_data_json) as response:
+                    await response.read()
+                    print(f"Response status for patient record {i}: {response.status}, {response.text}")
+                    ...
+                
         wb.close()
 
     excel_file_path = "C:\\Users\\user\\Desktop\\ключи\\Extrapiramidnaya_Patologia_1.xlsx"
