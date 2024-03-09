@@ -1,6 +1,6 @@
 from enum import Enum
 from uuid import UUID
-from pydantic import BaseModel, Field, computed_field, field_validator
+from pydantic import BaseModel, Field, field_validator
 from ..config import settings
 
 
