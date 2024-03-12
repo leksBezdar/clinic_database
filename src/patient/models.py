@@ -20,3 +20,9 @@ class Patient(Base):
     living_place: Mapped[str_null]
     job_title: Mapped[str_null]
     inhabited_locality: Mapped[str_null]
+
+    bp: Mapped[str_not_null]
+    ischemia: Mapped[str_not_null]
+    dep: Mapped[str_not_null]
+
+    therapist_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id", ondelete="CASCADE"))

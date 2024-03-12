@@ -14,8 +14,9 @@ class PatientService:
         try: 
             logger.info(f"Therapist {user.username} creates patient {patient_data.full_name}")
             db_patient = await PatientDAO.add(
-                schemas.PatientCreate(
+                schemas.PatientCreateDB(
                     **patient_data.model_dump(),
+                    therapist_id=user.id,
                 ))
             
             logger.info(f"Patient: {db_patient}")
@@ -29,7 +30,7 @@ class PatientService:
         try:
             patient = await PatientDAO.find_one_or_none(models.Patient.id==patient_id)
             logger.info(f"Therapist {user.username} retrieves patient data {patient.full_name}")
-            return patient
+            return patient or {"message": "No patient was found"}
         
         except Exception as e:
             logger.opt(exception=e).critical(f"Unexpected error in method PatientService.get_patient: {e}")
@@ -42,7 +43,20 @@ class PatientService:
                 *filter, offset=offset, limit=limit, **filter_by
             )
 
-            return patients
+            return patients or []
+        
+        except Exception as e:
+            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.get_all_patients: {e}")
+
+    @classmethod
+    async def get_all_patients_by_therapist(cls, *filter, user: User, offset: int, limit: int, **filter_by) -> list[models.Patient]:
+        try:
+            logger.info(f"Therapist {user.username} retrieves the list of all patients")
+            patients = await PatientDAO.find_all(
+                *filter, offset=offset, limit=limit, **filter_by
+            )
+
+            return patients or []
         
         except Exception as e:
             logger.opt(exception=e).critical(f"Unexpected error in method PatientService.get_all_patients: {e}")

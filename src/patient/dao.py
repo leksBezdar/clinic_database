@@ -1,8 +1,8 @@
 from .models import Patient
-from .schemas import PatientCreate, PatientUpdate
+from .schemas import PatientCreateDB, PatientUpdate
 
 from ..dao import BaseDAO
 
 
-class PatientDAO(BaseDAO[Patient, PatientCreate, PatientUpdate]):
+class PatientDAO(BaseDAO[Patient, PatientCreateDB, PatientUpdate]):
     model = Patient

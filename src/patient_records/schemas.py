@@ -8,9 +8,6 @@ class PatientRecordsBase(BaseModel):
   
   diagnosis: str | None = None
   treatment: str | None = None
-  bp: str = "Нет"
-  ischemia: str = "Нет"
-  dep: str = "Нет"
   
   patient_id: uuid.UUID
   
@@ -18,7 +15,7 @@ class PatientRecordsCreate(PatientRecordsBase):
   pass
 
 class PatientRecordsCreateDB(PatientRecordsBase):
-  therapist_id: uuid.UUID
+  pass
 
 class PatientRecords(PatientRecordsBase):
   id: uuid.UUID
@@ -31,9 +28,6 @@ class PatientRecordsUpdate(BaseModel):
   
   diagnosis: str | None = None
   treatment: str | None = None
-  bp: str | None = None
-  ischemia: str | None = None
-  dep: str | None = None
   
 
 class ExplorerPatientDTO(BaseModel):

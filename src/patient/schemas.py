@@ -11,8 +11,15 @@ class PatientBase(BaseModel):
   living_place: str | None = None
   inhabited_locality: str | None = None
 
+  bp: str = "Нет"
+  ischemia: str = "Нет"
+  dep: str = "Нет"
+
 class PatientCreate(PatientBase):
   pass
+
+class PatientCreateDB(PatientBase):
+  therapist_id: uuid.UUID
 
 class PatientUpdate(BaseModel):
   full_name: str | None = None 
@@ -21,9 +28,14 @@ class PatientUpdate(BaseModel):
   job_title: str | None = None 
   living_place: str | None = None 
   inhabited_locality: str | None = None 
+
+  bp: str | None = None
+  ischemia: str | None = None
+  dep: str | None = None
   
 class Patient(PatientBase):
   id: uuid.UUID
+  therapist_id: uuid.UUID
   
   class Config:
     from_attributes = True

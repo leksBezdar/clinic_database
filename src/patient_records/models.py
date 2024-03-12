@@ -18,10 +18,6 @@ class PatientRecord(Base):
     visit: Mapped[str]
     treatment: Mapped[str_null]
     
-    bp: Mapped[str_not_null]
-    ischemia: Mapped[str_not_null]
-    dep: Mapped[str_not_null]
-    
     patient_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("patients.id"))
     therapist_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id"), nullable=True)
 

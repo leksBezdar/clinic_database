@@ -17,7 +17,7 @@ class PatientRecordsService:
     async def create_patient_record(cls, patient_record_data: schemas.PatientRecordsCreate, user: User) -> models.PatientRecord:
         try:
             logger.info(f"Therapist {user.username} creates a record about patient {patient_record_data.patient_id}")
-            db_patient_record = await cls.__create_patient_record_db(patient_record_data, user)
+            db_patient_record = await cls.__create_patient_record_db(patient_record_data)
             logger.info(f"Patient record: {db_patient_record}")
             return db_patient_record
             
@@ -25,10 +25,9 @@ class PatientRecordsService:
             logger.opt(exception=e).critical(f"Unexpected error in method PatientService.create_patient: {e}")
 
     @staticmethod
-    async def __create_patient_record_db(patient_record_data: schemas.PatientRecordsCreate, user: User) -> models.PatientRecord:
-        return PatientRecordsDAO.add(
+    async def __create_patient_record_db(patient_record_data: schemas.PatientRecordsCreate) -> models.PatientRecord:
+        return await PatientRecordsDAO.add(
                 schemas.PatientRecordsCreateDB(
-                    therapist_id=user.id,
                     **patient_record_data.model_dump(),
                 ))           
 
@@ -37,7 +36,7 @@ class PatientRecordsService:
         try: 
             logger.info(f"User {user.username} with role {user.role} retrieves data about patient records {patient_id}")
             patient_records = await PatientRecordsDAO.find_all(
-                models.PatientRecord.patient_id==patient_id,
+                models.PatientRecord.id==patient_id,
                 offset=offset,
                 limit=limit,
                 **filter_by
@@ -160,6 +159,9 @@ class PatientRecordsService:
         patient_data = patient_record.model_dump()
         
         patient_data.update({
+        "bp": patient.bp,
+        "ishcemia": patient.ischemia,
+        "dep": patient.dep,
         "birthday": patient.birthday,
         "gender": patient.gender,
         "inhabited_locality": patient.inhabited_locality
