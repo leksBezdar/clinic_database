@@ -2,6 +2,7 @@ import uuid
 from loguru import logger
 from sqlalchemy import and_
 
+
 from . import schemas, models
 from .dao import PatientRecordsDAO
 
@@ -10,8 +11,10 @@ from ..auth.schemas import UserRole
 from ..patient.dao import PatientDAO
 from ..patient.models import Patient
 
+from ..utils import log_error_with_method_info
 
-class PatientRecordsService:               
+
+class PatientRecordsService:
     
     @classmethod
     async def create_patient_record(cls, patient_record_data: schemas.PatientRecordsCreate, user: User) -> models.PatientRecord:
@@ -22,7 +25,7 @@ class PatientRecordsService:
             return db_patient_record
             
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.create_patient: {e}")
+            log_error_with_method_info(e)
 
     @staticmethod
     async def __create_patient_record_db(patient_record_data: schemas.PatientRecordsCreate) -> models.PatientRecord:
@@ -45,7 +48,7 @@ class PatientRecordsService:
             return await cls.__format_patient_data(user=user, patient_records=patient_records)
         
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.get_patient_records: {e}")
+            log_error_with_method_info(e)
     
     @classmethod        
     async def get_one_patient_record(cls, user: User, patient_id: uuid.UUID, patient_record_id: uuid.UUID, **filter_by) -> models.PatientRecord:
@@ -65,7 +68,7 @@ class PatientRecordsService:
             return None
         
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.get_one_patient_record: {e}")
+            log_error_with_method_info(e)
 
     @classmethod
     async def get_all_patient_records(cls, *filter, user: User, offset: int, limit: int, **filter_by) -> list[models.PatientRecord]:
@@ -77,7 +80,7 @@ class PatientRecordsService:
             return formatted_patient_data
         
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.get_all_patient_records: {e}")
+            log_error_with_method_info(e)
             
                 
     @classmethod
@@ -88,7 +91,7 @@ class PatientRecordsService:
             return therapist_patients
 
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.get_all_patients_by_therapist: {e}")           
+            log_error_with_method_info(e)           
                 
 
     @classmethod
@@ -101,7 +104,7 @@ class PatientRecordsService:
             return patient_record      
         
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.update_patient_record: {e}")
+            log_error_with_method_info(e)
 
     @classmethod
     async def delete_patient_record(cls, user: User, patient_record_id: int) -> dict:
@@ -115,7 +118,7 @@ class PatientRecordsService:
             return {"Message": status_message}
             
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.delete_patient_record: {e}")
+            log_error_with_method_info(e)
 
     @classmethod
     async def __format_patient_data(cls, user: User, patient_records: list[models.PatientRecord]) -> list:
@@ -131,7 +134,7 @@ class PatientRecordsService:
                 raise ValueError
         
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.__format_patient_data method: {e}")
+            log_error_with_method_info(e)
 
     @classmethod
     async def __format_patient_data_for_explorer(cls, patient_records: list[models.PatientRecord]) -> list:
@@ -151,20 +154,24 @@ class PatientRecordsService:
             return formatted_patient_records
         
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.__format_patient_data_for_explorer method: {e}")
+            log_error_with_method_info(e)
             
     @staticmethod
     async def __get_data_into_explorer_dto_scheme(patient_record: schemas.PatientRecords) -> schemas.ExplorerPatientDTO:
-        patient = await PatientDAO.find_one_or_none(Patient.id==patient_record.patient_id)
-        patient_data = patient_record.model_dump()
+        try:
+            patient = await PatientDAO.find_one_or_none(Patient.id==patient_record.patient_id)
+            patient_data = patient_record.model_dump()
+
+            patient_data.update({
+                "bp": patient.bp,
+                "ishcemia": patient.ischemia,
+                "dep": patient.dep,
+                "birthday": patient.birthday,
+                "gender": patient.gender,
+                "inhabited_locality": patient.inhabited_locality
+                })
+
+            return schemas.ExplorerPatientDTO(**patient_data)
         
-        patient_data.update({
-        "bp": patient.bp,
-        "ishcemia": patient.ischemia,
-        "dep": patient.dep,
-        "birthday": patient.birthday,
-        "gender": patient.gender,
-        "inhabited_locality": patient.inhabited_locality
-        })
-        
-        return schemas.ExplorerPatientDTO(**patient_data)
+        except Exception as e:
+            log_error_with_method_info(e)

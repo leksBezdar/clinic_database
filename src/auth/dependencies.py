@@ -9,7 +9,7 @@ from .service import UserService
 from . import exceptions
 from ..config import settings
 
-oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="/login")
+oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="/auth/login")
 
 
 async def get_current_user(

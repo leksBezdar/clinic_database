@@ -6,6 +6,8 @@ from .dao import PatientDAO
 
 from ..auth.models import User
 
+from ..utils import log_error_with_method_info
+
 
 class PatientService:
     
@@ -23,7 +25,7 @@ class PatientService:
             return db_patient
             
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.create_patient: {e}")
+            log_error_with_method_info(e)
             
     @classmethod
     async def get_patient(cls, patient_id: uuid.UUID, user: User) -> models.Patient:
@@ -33,7 +35,7 @@ class PatientService:
             return patient or {"message": "No patient was found"}
         
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.get_patient: {e}")
+            log_error_with_method_info(e)
 
     @classmethod
     async def get_all_patients(cls, *filter, user: User, offset: int, limit: int, **filter_by) -> list[models.Patient]:
@@ -46,7 +48,7 @@ class PatientService:
             return patients or []
         
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.get_all_patients: {e}")
+            log_error_with_method_info(e)
 
     @classmethod
     async def get_all_patients_by_therapist(cls, *filter, user: User, offset: int, limit: int, **filter_by) -> list[models.Patient]:
@@ -59,7 +61,7 @@ class PatientService:
             return patients or []
         
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.get_all_patients: {e}")
+            log_error_with_method_info(e)
             
     
     @classmethod
@@ -72,7 +74,7 @@ class PatientService:
             return patient
         
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.update_patient: {e}")
+            log_error_with_method_info(e)
             
     @classmethod 
     async def delete_patient(cls, patient_id: uuid.UUID, user: User) -> dict:
@@ -83,4 +85,4 @@ class PatientService:
             return {"message": f"Therapist {user.username} successfully deleted patient {patient_id}"}
         
         except Exception as e:
-            logger.opt(exception=e).critical(f"Unexpected error in method PatientService.delete_patient: {e}")
+            log_error_with_method_info(e)

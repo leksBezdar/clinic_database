@@ -19,14 +19,18 @@ class UserCreate(UserBase):
     @field_validator("username")
     def validate_username_length(cls, value):
         if len(value) < int(settings.MIN_USERNAME_LENGTH) or len(value) > int(settings.MAX_USERNAME_LENGTH):
-            raise ValueError("Username must be between 5 and 15 characters")
+            raise ValueError(
+                f"Username must be between {settings.MIN_USERNAME_LENGTH} and {settings.MAX_USERNAME_LENGTH} characters"
+                )
 
         return value
 
     @field_validator("password")
     def validate_password_complexity(cls, value):
         if len(value) < int(settings.MIN_PASSWORD_LENGTH) or len(value) > int(settings.MAX_PASSWORD_LENGTH):
-            raise ValueError("Password must be between 8 and 30 characters")
+            raise ValueError(
+                f"Password must be between {settings.MIN_PASSWORD_LENGTH} and {settings.MAX_PASSWORD_LENGTH} characters"
+                )
 
         return value
 

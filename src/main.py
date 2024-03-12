@@ -1,7 +1,6 @@
 from loguru import logger
 
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.auth.routers import auth_router, user_router
@@ -30,7 +29,7 @@ logger.add(
 )
 
 
-app = FastAPI()
+app = FastAPI(docs_url="/secure/docs", redoc_url=None)
 
 
 app.add_middleware(
@@ -46,8 +45,3 @@ app.include_router(auth_router, tags=["AUTH"])
 app.include_router(user_router, tags=["USER"])
 app.include_router(patient_router, tags=["PATIENT"])
 app.include_router(patient_records_router, tags=["PATIENT RECORDS"])
-
-
-@app.get("/", response_class=HTMLResponse)
-def home(request: Request):
-    return RedirectResponse(url=str(request.url) + "docs")
