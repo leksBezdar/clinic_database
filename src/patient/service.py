@@ -12,13 +12,13 @@ from ..utils import log_error_with_method_info
 class PatientService:
     
     @classmethod
-    async def create_patient(cls, patient_data: schemas.PatientCreate, user: User) -> models.Patient:
+    async def create_patient(cls, patient_data: schemas.PatientCreate) -> models.Patient:
         try: 
-            logger.info(f"Therapist {user.username} creates patient {patient_data.full_name}")
+            # logger.info(f"Therapist {user.username} creates patient {patient_data.full_name}")
             db_patient = await PatientDAO.add(
                 schemas.PatientCreateDB(
                     **patient_data.model_dump(),
-                    therapist_id=user.id,
+                    therapist_id="5e49a907-b7b9-4bd9-bb23-7581f3c8bdad",
                 ))
             
             logger.info(f"Patient: {db_patient}")
@@ -86,3 +86,8 @@ class PatientService:
         
         except Exception as e:
             log_error_with_method_info(e)
+            
+    @classmethod
+    async def delete_all_patients(cls, user: User) -> dict:
+        await PatientDAO.delete()
+        return {"message": "success"}

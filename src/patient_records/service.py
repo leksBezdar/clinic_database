@@ -17,9 +17,9 @@ from ..utils import log_error_with_method_info
 class PatientRecordsService:
     
     @classmethod
-    async def create_patient_record(cls, patient_record_data: schemas.PatientRecordsCreate, user: User) -> models.PatientRecord:
+    async def create_patient_record(cls, patient_record_data: schemas.PatientRecordsCreate) -> models.PatientRecord:
         try:
-            logger.info(f"Therapist {user.username} creates a record about patient {patient_record_data.patient_id}")
+            # logger.info(f"Therapist {user.username} creates a record about patient {patient_record_data.patient_id}")
             db_patient_record = await cls.__create_patient_record_db(patient_record_data)
             logger.info(f"Patient record: {db_patient_record}")
             return db_patient_record
@@ -39,7 +39,7 @@ class PatientRecordsService:
         try: 
             logger.info(f"User {user.username} with role {user.role} retrieves data about patient records {patient_id}")
             patient_records = await PatientRecordsDAO.find_all(
-                models.PatientRecord.id==patient_id,
+                models.PatientRecord.patient_id==patient_id,
                 offset=offset,
                 limit=limit,
                 **filter_by
@@ -87,8 +87,19 @@ class PatientRecordsService:
     async def get_all_patient_records_by_therapist(cls, *filter, user: User, offset: int, limit: int, **filter_by) -> list[models.PatientRecord]:
         try: 
             logger.info(f"Therapist {user.username} retrieves the list of all their patients")
-            therapist_patients = await PatientRecordsDAO.find_all(*filter, offset=offset, limit=limit, **filter_by)
-            return therapist_patients
+            patients = await PatientDAO.find_all(*filter, **filter_by)
+            
+            patient_records = []
+            
+            for patient in patients:
+            
+                patient_record = await PatientRecordsDAO.find_all(models.PatientRecord.patient_id==patient.id, offset=offset)
+                
+                if len(patient_records) >= limit:
+                    return patient_records
+                
+                patient_records.extend(patient_record)
+            return patient_records
 
         except Exception as e:
             log_error_with_method_info(e)           
@@ -119,6 +130,11 @@ class PatientRecordsService:
             
         except Exception as e:
             log_error_with_method_info(e)
+    
+    @classmethod
+    async def delete_all_patient_records(cls, user: User) -> dict:
+        await PatientRecordsDAO.delete()
+        return {"message": "success"}
 
     @classmethod
     async def __format_patient_data(cls, user: User, patient_records: list[models.PatientRecord]) -> list:

@@ -1,6 +1,5 @@
 import inspect
 
-from typing import Never
 from loguru import logger
 
 
