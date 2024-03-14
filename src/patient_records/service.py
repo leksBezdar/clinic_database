@@ -2,6 +2,8 @@ import uuid
 from loguru import logger
 from sqlalchemy import and_
 
+from ..patient.service import PatientService
+
 
 from . import schemas, models
 from .dao import PatientRecordsDAO
@@ -35,7 +37,7 @@ class PatientRecordsService:
                 ))           
 
     @classmethod        
-    async def get_patient_records(cls, user: User, patient_id: uuid.UUID, offset: int, limit: int, **filter_by) -> list[models.PatientRecord]:
+    async def get_patient_records(cls, user: User, patient_id: uuid.UUID, offset: int = 0, limit: int = 100_000, **filter_by) -> list[models.PatientRecord]:
         try: 
             logger.info(f"Пользователь {user.username} с ролью {user.role} получает данные о записях пациента {patient_id}")
             patient_records = await PatientRecordsDAO.find_all(
@@ -87,18 +89,18 @@ class PatientRecordsService:
     async def get_all_patient_records_by_therapist(cls, *filter, user: User, offset: int, limit: int, **filter_by) -> list[models.PatientRecord]:
         try: 
             logger.info(f"Терапевт {user.username} получает список всех своих пациентов")
-            patients = await PatientDAO.find_all(*filter, **filter_by)
-            
+
+            therapist_patients = await PatientService.get_all_patients_by_therapist(user=user)
             patient_records = []
-            
-            for patient in patients:
-            
-                patient_record = await PatientRecordsDAO.find_all(models.PatientRecord.patient_id==patient.id, offset=offset)
+            for patient in therapist_patients:
                 
                 if len(patient_records) >= limit:
-                    return patient_records
+                    return patient_records 
+                
+                patient_record = await cls.get_patient_records(user=user, patient_id=patient.id)
                 
                 patient_records.extend(patient_record)
+                
             return patient_records
 
         except Exception as e:
