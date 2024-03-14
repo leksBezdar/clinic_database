@@ -14,9 +14,9 @@ patient_records_router = APIRouter(prefix="/patient_records_router")
 @patient_records_router.post("/create_patient_record", response_model=schemas.PatientRecords)
 async def create_patient_record(
   	patient_record_data: schemas.PatientRecordsCreate,
-	# user: User = Depends(get_current_therapist)
+	user: User = Depends(get_current_therapist)
 ):
-    return await PatientRecordsService.create_patient_record(patient_record_data=patient_record_data)
+    return await PatientRecordsService.create_patient_record(patient_record_data=patient_record_data, user=user)
 
 @patient_records_router.get("/get_one_patient_record", response_model=schemas.PatientRecords | schemas.ExplorerPatientDTO | None)
 async def get_one_patient_record(

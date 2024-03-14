@@ -12,9 +12,9 @@ patient_router = APIRouter(prefix="/patient_router")
 @patient_router.post("/create_patient", response_model=schemas.Patient)
 async def create_patient(
     patient_data: schemas.PatientCreate,
-    # user: User = Depends(get_current_therapist)
+    user: User = Depends(get_current_therapist)
 ):
-    return await PatientService.create_patient(patient_data=patient_data)
+    return await PatientService.create_patient(patient_data=patient_data, user=user)
 
 @patient_router.get("/get_patient", response_model=schemas.Patient | dict)
 async def get_patient(

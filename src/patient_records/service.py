@@ -17,9 +17,9 @@ from ..utils import log_error_with_method_info
 class PatientRecordsService:
     
     @classmethod
-    async def create_patient_record(cls, patient_record_data: schemas.PatientRecordsCreate) -> models.PatientRecord:
+    async def create_patient_record(cls, patient_record_data: schemas.PatientRecordsCreate, user: User) -> models.PatientRecord:
         try:
-            # logger.info(f"Therapist {user.username} creates a record about patient {patient_record_data.patient_id}")
+            logger.info(f"Therapist {user.username} creates a record about patient {patient_record_data.patient_id}")
             db_patient_record = await cls.__create_patient_record_db(patient_record_data)
             logger.info(f"Patient record: {db_patient_record}")
             return db_patient_record

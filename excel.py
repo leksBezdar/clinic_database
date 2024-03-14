@@ -1,5 +1,4 @@
 import json
-import time
 import uuid
 import aiohttp
 import asyncio
@@ -8,26 +7,10 @@ import openpyxl
 from datetime import datetime
 from types import NoneType
 
-from pydantic import BaseModel
-
-from src.patient.schemas import PatientBase as pb
+from src.patient.schemas import PatientBase
+from src.patient_records.schemas import PatientRecordsCreateDB
 
 async def main():
-    
-    class PatientBase(pb):
-        pass
-        
-    class PatientRecordsBase(BaseModel):
-        visit: str | None = None
-        
-        diagnosis: str | None = None
-        treatment: str | None = None
-
-        patient_id: uuid.UUID | str
-        
-        
-    class PatientRecordsCreateDB(PatientRecordsBase):
-        pass 
     
     async def process_excel_file(file_path):
         wb = openpyxl.load_workbook(file_path)
@@ -85,24 +68,14 @@ async def main():
                 )
                 
                 
-                patient_data_json = patient_data.model_dump()
+                patient_data_json = patient_data.model_dump()                                  
                 
-                async with session.post("https://clinic.universal-hub.site/patient_router/create_patient", json=patient_data_json) as response:
+                async with session.post("http://localhost:9999/patient_router/create_patient", json=patient_data_json) as response:
                     text_response = await response.text()
                     json_response = json.loads(text_response)
                     patient_id = json_response.get("id")
                     await response.read()
-                    print(f"Response status for patient {i}: {response.status}, {response.text}")                              
-                
-                
-                
-                
-                # async with session.post("http://localhost:8000/patient_router/create_patient", json=patient_data_json) as response:
-                #     text_response = await response.text()
-                #     json_response = json.loads(text_response)
-                #     patient_id = json_response.get("id")
-                #     await response.read()
-                    # print(f"Response status for patient {i}: {response.status}, {response.text}")
+                    print(f"Response status for patient {i}: {response.status}, {response.text}")
                     
                 first_patient_record_data = PatientRecordsCreateDB(
                     diagnosis=diagnosis,
@@ -123,24 +96,16 @@ async def main():
                 first_patient_record_data_json = first_patient_record_data.model_dump()
                 last_patient_record_data_json = last_patient_record_data.model_dump()
                 
-                async with session.post('https://clinic.universal-hub.site/patient_records_router/create_patient_record', json=first_patient_record_data_json) as response:
+                    
+                async with session.post('http://localhost:9999/patient_records_router/create_patient_record', json=first_patient_record_data_json) as response:
                     await response.read()
                     print(f"Response status for first patient record {i}: {response.status}, {response.text}")
                     
-                async with session.post('https://clinic.universal-hub.site/patient_records_router/create_patient_record', json=last_patient_record_data_json) as response:
+                async with session.post('http://localhost:9999/patient_records_router/create_patient_record', json=last_patient_record_data_json) as response:
                     await response.read()
                     print(f"Response status for last patient record {i}: {response.status}, {response.text}")
                     
-                # async with session.post('http://localhost:8000/patient_records_router/create_patient_record', json=first_patient_record_data_json) as response:
-                #     await response.read()
-                    # print(f"Response status for first patient record {i}: {response.status}, {response.text}")
                     
-                # async with session.post('http://localhost:8000/patient_records_router/create_patient_record', json=last_patient_record_data_json) as response:
-                #     await response.read()
-                    # print(f"Response status for last patient record {i}: {response.status}, {response.text}")
-                    
-                    
-                time.sleep(10)
         wb.close()
 
     excel_file_path = "C:\\Users\\user\\Desktop\\ключи\\Extrapiramidnaya_Patologia_1.xlsx"
