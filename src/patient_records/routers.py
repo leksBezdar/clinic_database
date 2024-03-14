@@ -75,5 +75,4 @@ async def delete_patient_record(
 async def delete_all_patient_records(
     user: User = Depends(get_current_therapist)
 ):
-    
     return await PatientRecordsService.delete_all_patient_records(user=user)

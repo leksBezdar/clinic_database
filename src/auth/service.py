@@ -267,7 +267,7 @@ class AuthService:
             log_error_with_method_info(e)
 
     @classmethod
-    async def refresh_token(cls, response: Response, token: uuid.UUID) -> schemas.Token:
+    async def refresh_token(cls, response: Response, token: uuid.UUID) -> dict:
         try:
             if token is None:
                 raise exceptions.Unauthorized
@@ -297,7 +297,7 @@ class AuthService:
                     expires_in=refresh_token_expires.total_seconds()
                 )
             )
-            return schemas.Token(access_token=access_token, refresh_token=new_refresh_token, token_type="Bearer")
+            return {"message": "Tokens were refreshed successfully"}
 
         except Exception as e:
             log_error_with_method_info(e)

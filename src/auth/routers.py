@@ -45,7 +45,7 @@ async def logout(
 async def refresh_token(
     response: Response,
     request: Request
-) -> schemas.Token:
+) -> dict:
     token = request.cookies.get("refresh_token")
     return await AuthService.refresh_token(response, token)
 

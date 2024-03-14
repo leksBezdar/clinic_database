@@ -21,8 +21,8 @@ def log_error_with_method_info(exception: Exception):
     line_number = frame_info.lineno
 
     logger.opt(exception=exception).critical(
-        f"Unexpected error in method {class_name}.{method_name} "
-        f"of module {module_name}, line {line_number}: {exception}"
+        f"Неожиданная ошибка в методе {class_name}.{method_name} "
+        f"в модуле {module_name}, в строке {line_number}: {exception}"
     )
 
     raise exception

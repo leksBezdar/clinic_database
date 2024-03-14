@@ -14,14 +14,14 @@ class PatientService:
     @classmethod
     async def create_patient(cls, patient_data: schemas.PatientCreate, user: User) -> models.Patient:
         try: 
-            logger.info(f"Therapist {user.username} creates patient {patient_data.full_name}")
+            logger.info(f"Терапевт {user.username} создает пациента {patient_data.full_name}")
             db_patient = await PatientDAO.add(
                 schemas.PatientCreateDB(
                     **patient_data.model_dump(),
                     therapist_id=user.id,
                 ))
             
-            logger.info(f"Patient: {db_patient}")
+            logger.info(f"Пациент: {db_patient}")
             return db_patient
             
         except Exception as e:
@@ -31,8 +31,8 @@ class PatientService:
     async def get_patient(cls, patient_id: uuid.UUID, user: User) -> models.Patient:
         try:
             patient = await PatientDAO.find_one_or_none(models.Patient.id==patient_id)
-            logger.info(f"Therapist {user.username} retrieves patient data {patient.full_name}")
-            return patient or {"message": "No patient was found"}
+            logger.info(f"Терапевт {user.username} получает данные пациента {patient.full_name}")
+            return patient or {"message": "Пациент не найден"}
         
         except Exception as e:
             log_error_with_method_info(e)
@@ -40,7 +40,7 @@ class PatientService:
     @classmethod
     async def get_all_patients(cls, *filter, user: User, offset: int, limit: int, **filter_by) -> list[models.Patient]:
         try:
-            logger.info(f"Therapist {user.username} retrieves the list of all patients")
+            logger.info(f"Терапевт {user.username} получает список всех пациентов")
             patients = await PatientDAO.find_all(
                 *filter, offset=offset, limit=limit, **filter_by
             )
@@ -53,7 +53,7 @@ class PatientService:
     @classmethod
     async def get_all_patients_by_therapist(cls, *filter, user: User, offset: int, limit: int, **filter_by) -> list[models.Patient]:
         try:
-            logger.info(f"Therapist {user.username} retrieves the list of all patients")
+            logger.info(f"Терапевт {user.username} получает список всех пациентов")
             patients = await PatientDAO.find_all(
                 *filter, offset=offset, limit=limit, **filter_by
             )
@@ -67,9 +67,9 @@ class PatientService:
     @classmethod
     async def update_patient(cls, patient_id: uuid.UUID, user: User, patient_in: schemas.PatientUpdate) -> models.Patient:
         try:
-            logger.info(f"Therapist {user.username} modifies patient data {patient_id}")
+            logger.info(f"Терапевт {user.username} изменяет данные пациента {patient_id}")
             patient = await PatientDAO.update(models.Patient.id==patient_id, obj_in=patient_in)
-            logger.info(f"Updated patient data: {patient}")
+            logger.info(f"Обновленные данные пациента: {patient}")
             
             return patient
         
@@ -79,10 +79,10 @@ class PatientService:
     @classmethod 
     async def delete_patient(cls, patient_id: uuid.UUID, user: User) -> dict:
         try:
-            logger.info(f"Therapist {user.username} deletes patient {patient_id}")
+            logger.info(f"Терапевт {user.username} удаляет пациента {patient_id}")
             await PatientDAO.delete(models.Patient.id==patient_id)
             
-            return {"message": f"Therapist {user.username} successfully deleted patient {patient_id}"}
+            return {"message": f"Терапевт {user.username} успешно удалил пациента {patient_id}"}
         
         except Exception as e:
             log_error_with_method_info(e)
@@ -90,4 +90,4 @@ class PatientService:
     @classmethod
     async def delete_all_patients(cls, user: User) -> dict:
         await PatientDAO.delete()
-        return {"message": "success"}
+        return {"message": "успех"}
