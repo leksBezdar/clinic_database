@@ -10,6 +10,9 @@ from src.patient.routers import patient_router
 from .config import settings
 
 
+app = FastAPI(docs_url="/secure/docs", redoc_url=None)
+
+
 logger.add(
     "critical_logs.log",
     format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
@@ -27,9 +30,6 @@ logger.add(
     level="INFO",
     filter=lambda record: record["level"].name == "INFO"
 )
-
-
-app = FastAPI(docs_url="/secure/docs", redoc_url=None)
 
 
 app.add_middleware(

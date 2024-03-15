@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from . import schemas
 from .service import PatientService
-from .dependencies import get_current_therapist
+from .dependencies import get_current_therapist, get_current_user
 from ..auth.models import User
 
 
@@ -23,11 +23,11 @@ async def get_patient(
 ):
     return await PatientService.get_patient(patient_id=patient_id, user=user)
 
-@patient_router.get("/get_all_patients", response_model=list[schemas.Patient])
+@patient_router.get("/get_all_patients", response_model=list[schemas.Patient] | list[schemas.ExplorerPatientDTO])
 async def get_all_patients(
     limit: int = 100,
     offset: int = 0,
-    user: User = Depends(get_current_therapist)
+    user: User = Depends(get_current_user)
 ):
     return await PatientService.get_all_patients(user=user, offset=offset, limit=limit)
 

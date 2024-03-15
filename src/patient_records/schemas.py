@@ -9,7 +9,7 @@ class PatientRecordsBase(BaseModel):
   diagnosis: str | None = None
   treatment: str | None = None
   
-  patient_id: uuid.UUID
+  patient_id: uuid.UUID | str
   
 class PatientRecordsCreate(PatientRecordsBase):
   pass

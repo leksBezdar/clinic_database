@@ -1,6 +1,8 @@
 import uuid
 from loguru import logger
 
+from ..auth.schemas import UserRole
+
 from . import schemas, models
 from .dao import PatientDAO
 
@@ -44,8 +46,8 @@ class PatientService:
             patients = await PatientDAO.find_all(
                 *filter, offset=offset, limit=limit, **filter_by
             )
-
-            return patients or []
+            formatted_patients = await cls.__format_patient_data(user=user, patient_records=patients)
+            return formatted_patients or []
         
         except Exception as e:
             log_error_with_method_info(e)
@@ -91,3 +93,51 @@ class PatientService:
     async def delete_all_patients(cls, user: User) -> dict:
         await PatientDAO.delete()
         return {"message": "успех"}
+    
+    
+    @classmethod
+    async def __format_patient_data(cls, user: User, patient_records: list[models.Patient]) -> list:
+        try:        
+            if user.role == UserRole.therapist.value:
+                return patient_records
+            elif user.role == UserRole.explorer.value:
+                logger.info(f"Форматирование данных для пользователя {user.username} с ролью {user.role}")
+                return await cls.__format_patient_data_for_explorer(patient_records)
+            
+            else: 
+                logger.opt().critical(f"Неожиданная роль пользователя {user.username}: {user.role}")
+                raise ValueError
+        
+        except Exception as e:
+            log_error_with_method_info(e)
+
+    @classmethod
+    async def __format_patient_data_for_explorer(cls, patient_records: list[models.Patient]) -> list:
+        try: 
+            formatted_patient_records = []
+
+            for patient_record in patient_records:
+                patient_record = schemas.Patient(**patient_record.__dict__)                       
+                formatted_record = await cls.__get_data_into_explorer_dto_scheme(patient_record=patient_record)
+                
+                if len(patient_records) == 1:
+                    return formatted_record
+
+                formatted_patient_records.append(formatted_record)
+                
+            logger.info(f"Возвращение отформатированных данных для пользователя с ролью исследователя")        
+            return formatted_patient_records
+        
+        except Exception as e:
+            log_error_with_method_info(e)
+            
+    @staticmethod
+    async def __get_data_into_explorer_dto_scheme(patient_record: schemas.Patient) -> schemas.ExplorerPatientDTO:
+        try:
+            
+            patient_record = patient_record.model_dump()
+            
+            return schemas.ExplorerPatientDTO(**patient_record)
+        
+        except Exception as e:
+            log_error_with_method_info(e)
