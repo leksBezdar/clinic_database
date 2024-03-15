@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 from sqlalchemy import UUID, ForeignKey
-from sqlalchemy.orm import  Mapped, mapped_column
+from sqlalchemy.orm import  Mapped, mapped_column, relationship
 
 from ..database import Base
 
@@ -21,3 +21,7 @@ class PatientRecord(Base):
     patient_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("patients.id"))
     therapist_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id"), nullable=True)
 
+    patient = relationship("Patient", back_populates="records")
+    
+    def __str__(self):
+        return str(self.visit)

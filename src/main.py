@@ -2,11 +2,15 @@ from loguru import logger
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqladmin import Admin
 
 from src.auth.routers import auth_router, user_router
 from src.patient_records.routers import patient_records_router
 from src.patient.routers import patient_router
 
+from src.admin.views import PatientAdmin, PatientRecordAdmin, UserAdmin
+
+from .database import async_engine
 from .config import settings
 
 
@@ -45,3 +49,10 @@ app.include_router(auth_router, tags=["AUTH"])
 app.include_router(user_router, tags=["USER"])
 app.include_router(patient_router, tags=["PATIENT"])
 app.include_router(patient_records_router, tags=["PATIENT RECORDS"])
+
+
+admin = Admin(app, async_engine)
+
+admin.add_view(UserAdmin)
+admin.add_view(PatientAdmin)
+admin.add_view(PatientRecordAdmin)

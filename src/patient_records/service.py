@@ -2,7 +2,6 @@ import uuid
 from loguru import logger
 from sqlalchemy import and_
 
-
 from . import schemas, models
 from .dao import PatientRecordsDAO
 
@@ -51,7 +50,7 @@ class PatientRecordsService:
             log_error_with_method_info(e)
     
     @classmethod        
-    async def get_one_patient_record(cls, user: User, patient_id: uuid.UUID, patient_record_id: uuid.UUID, **filter_by) -> models.PatientRecord:
+    async def get_one_patient_record(cls, user: User, patient_id: uuid.UUID, patient_record_id: uuid.UUID, **filter_by) -> models.PatientRecord | None:
         try: 
             logger.info(f"Пользователь {user.username} с ролью {user.role} получает данные о записи пациента {patient_record_id}")
             patient_record = await PatientRecordsDAO.find_one_or_none(
