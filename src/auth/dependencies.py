@@ -9,6 +9,7 @@ from .models import User
 from .service import UserService
 from .utils import OAuth2PasswordBearerWithCookie
 
+
 oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="/auth/login")
 
 

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..database import Base
 from ..patient_records.models import PatientRecord
 
+
 str_null = Annotated[str, mapped_column(nullable=True)]
 str_not_null = Annotated[str, mapped_column(nullable=False)]
 

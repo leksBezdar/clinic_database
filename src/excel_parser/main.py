@@ -1,6 +1,5 @@
 import asyncio
 import re
-import time
 import uuid
 from datetime import datetime
 from types import NoneType

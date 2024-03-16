@@ -8,6 +8,7 @@ from . import schemas
 from .dependencies import get_current_therapist
 from .service import PatientRecordsService
 
+
 patient_records_router = APIRouter(prefix="/patient_records_router")
 
 

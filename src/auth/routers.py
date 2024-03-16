@@ -7,6 +7,7 @@ from .dependencies import get_current_superuser, get_current_user
 from .models import User
 from .service import AuthService, UserService
 
+
 auth_router = APIRouter(prefix="/auth")
 user_router = APIRouter(prefix="/users")
 

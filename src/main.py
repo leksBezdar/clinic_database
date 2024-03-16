@@ -11,6 +11,7 @@ from src.patient_records.routers import patient_records_router
 from .config import settings
 from .database import async_engine
 
+
 app = FastAPI(docs_url="/secure/docs", redoc_url=None)
 
 if settings.MODE != "TEST":

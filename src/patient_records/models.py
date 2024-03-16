@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
 
+
 str_null = Annotated[str, mapped_column(nullable=True)]
 str_not_null = Annotated[str, mapped_column(nullable=False)]
 

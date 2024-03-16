@@ -5,6 +5,7 @@ from . import schemas
 from .dependencies import get_current_therapist, get_current_user
 from .service import PatientService
 
+
 patient_router = APIRouter(prefix="/patient_router")
 
 

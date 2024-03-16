@@ -196,7 +196,7 @@ class PatientRecordsService:
 
                 formatted_patient_records.append(formatted_record)
 
-            logger.info(f"Возвращение отформатированных данных для пользователя с ролью исследователя")
+            logger.info("Возвращение отформатированных данных для пользователя с ролью исследователь")
             return formatted_patient_records
 
         except Exception as e:

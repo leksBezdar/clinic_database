@@ -1,9 +1,15 @@
 [tool.black]
 line-length = 110
 target-version = ['py311']
+exclude = '''
+    venv/
+    tests/
+    migrations/
+'''
 
 [tool.isort]
 profile = "black"
+lines_after_imports = 2
 multi_line_output = 3
 include_trailing_comma = true
 force_grid_wrap = 0

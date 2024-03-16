@@ -15,7 +15,7 @@
 #     }
 #     response = await ac.post("/auth/registration", json=json)
 #     assert response.status_code == status_code
-    
+
 #     if response.status_code == 201:
 #         response = await ac.post("/auth/login", json={
 #             "username" : username,
@@ -23,8 +23,3 @@
 #         })
 #         assert response.status_code == 200
 #         assert response.cookies["access_token"] is not None
-        
-            
-    
-    
-    

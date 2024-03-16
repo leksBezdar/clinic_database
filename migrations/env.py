@@ -5,13 +5,15 @@ from os.path import abspath, dirname
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
-from src.auth.models import RefreshToken, User # noqa
+from src.auth.models import RefreshToken, User  # noqa
 from src.config import settings
 from src.database import Base
-from src.patient.models import Patient # noqa
-from src.patient_records.models import PatientRecord # noqa
+from src.patient.models import Patient  # noqa
+from src.patient_records.models import PatientRecord  # noqa
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -74,9 +76,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

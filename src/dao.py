@@ -8,6 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from .database import Base, async_session_maker
 
+
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
