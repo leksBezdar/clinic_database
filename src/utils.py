@@ -3,7 +3,6 @@ import inspect
 from loguru import logger
 
 
-
 def log_error_with_method_info(exception: Exception):
     frame_info = inspect.stack()[2]
     caller_frame = frame_info.frame
@@ -17,7 +16,7 @@ def log_error_with_method_info(exception: Exception):
                 break
 
     method_name = frame_info.function
-    module_name = caller_globals.get('__name__', None)
+    module_name = caller_globals.get("__name__", None)
     line_number = frame_info.lineno
 
     logger.opt(exception=exception).critical(

@@ -1,15 +1,14 @@
 import uuid
-import jwt
-
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import or_
-from fastapi import Response
 
-from . import schemas, models, exceptions, utils
-from .dao import UserDAO, RefreshTokenDAO
+import jwt
+from fastapi import Response
+from sqlalchemy import or_
 
 from ..config import settings
 from ..utils import log_error_with_method_info
+from . import exceptions, models, schemas, utils
+from .dao import RefreshTokenDAO, UserDAO
 
 
 class UserService:
@@ -53,10 +52,7 @@ class UserService:
         try:
             hashed_password = await utils.get_hashed_password(user.password)
             return await UserDAO.add(
-                schemas.UserCreateDB(
-                    **user.model_dump(),
-                    hashed_password=hashed_password
-                )
+                schemas.UserCreateDB(**user.model_dump(), hashed_password=hashed_password)
             )
 
         except Exception as e:
@@ -72,14 +68,18 @@ class UserService:
             log_error_with_method_info(e)
 
     @classmethod
-    async def get_user(cls, user_id: uuid.UUID = None, token: str = None, username: str = None) -> models.User:
+    async def get_user(
+        cls, user_id: uuid.UUID = None, token: str = None, username: str = None
+    ) -> models.User:
         try:
             if not user_id and not token and not username:
                 raise exceptions.NoUserData
 
             if token:
                 user_id = await cls._get_access_token_payload(access_token=token)
-            return await UserDAO.find_one_or_none(or_(models.User.id == user_id, models.User.username == username))
+            return await UserDAO.find_one_or_none(
+                or_(models.User.id == user_id, models.User.username == username)
+            )
 
         except Exception as e:
             log_error_with_method_info(e)
@@ -160,7 +160,7 @@ class UserService:
             if db_user is None:
                 raise exceptions.UserDoesNotExist
 
-            await UserDAO.update(models.User.id == user_id, obj_in={'is_active': False})
+            await UserDAO.update(models.User.id == user_id, obj_in={"is_active": False})
             return {"Message": f"User {user_id} was deleted successfuly"}
 
         except Exception as e:
@@ -179,7 +179,9 @@ class UserService:
     async def _get_access_token_payload(access_token: str) -> uuid.UUID:
         try:
             access_token = access_token.split()[1]
-            payload: dict = jwt.decode(access_token, settings.TOKEN_SECRET_KEY, algorithms=[settings.ALGORITHM])
+            payload: dict = jwt.decode(
+                access_token, settings.TOKEN_SECRET_KEY, algorithms=[settings.ALGORITHM]
+            )
             user_id = payload.get("sub")
             return user_id
 
@@ -191,6 +193,7 @@ class UserService:
 
         except Exception as e:
             log_error_with_method_info(e)
+
 
 class AuthService:
 
@@ -209,33 +212,35 @@ class AuthService:
     async def __set_tokens_in_cookie(response: Response, access_token: str, refresh_token: uuid.UUID) -> None:
         try:
             response.set_cookie(
-                'access_token',
+                "access_token",
                 access_token,
                 max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
                 httponly=True,
                 samesite="None",
-                secure=True
+                secure=True,
             )
             response.set_cookie(
-                'refresh_token',
+                "refresh_token",
                 refresh_token,
                 max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 30 * 24 * 60,
                 httponly=True,
                 samesite="None",
-                secure=True
+                secure=True,
             )
 
         except Exception as e:
             log_error_with_method_info(e)
 
     @staticmethod
-    async def __create_tokens_db(user_id: uuid.UUID, access_token: str, refresh_token: uuid.UUID) -> schemas.Token:
+    async def __create_tokens_db(
+        user_id: uuid.UUID, access_token: str, refresh_token: uuid.UUID
+    ) -> schemas.Token:
         try:
             await RefreshTokenDAO.add(
                 schemas.RefreshTokenCreate(
                     user_id=user_id,
                     refresh_token=refresh_token,
-                    expires_in=timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS).total_seconds()
+                    expires_in=timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS).total_seconds(),
                 )
             )
             return schemas.Token(access_token=access_token, refresh_token=refresh_token, token_type="Bearer")
@@ -248,7 +253,7 @@ class AuthService:
         try:
             to_encode = {
                 "sub": str(user_id),
-                "exp": datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+                "exp": datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
             }
             to_encode.update(**kwargs)
             encoded_jwt = jwt.encode(to_encode, settings.TOKEN_SECRET_KEY, algorithm=settings.ALGORITHM)
@@ -276,7 +281,9 @@ class AuthService:
             if refresh_token is None:
                 raise exceptions.InvalidToken
 
-            if datetime.now(timezone.utc) >= refresh_token.created_at + timedelta(seconds=refresh_token.expires_in):
+            if datetime.now(timezone.utc) >= refresh_token.created_at + timedelta(
+                seconds=refresh_token.expires_in
+            ):
                 await RefreshTokenDAO.delete(id=refresh_token.id)
                 await cls.__delete_tokens_from_cookie(response)
                 raise exceptions.TokenExpired
@@ -293,9 +300,8 @@ class AuthService:
             await RefreshTokenDAO.update(
                 models.RefreshToken.id == refresh_token.id,
                 obj_in=schemas.RefreshTokenUpdate(
-                    refresh_token=new_refresh_token,
-                    expires_in=refresh_token_expires.total_seconds()
-                )
+                    refresh_token=new_refresh_token, expires_in=refresh_token_expires.total_seconds()
+                ),
             )
             return {"message": "Tokens were refreshed successfully"}
 
@@ -312,7 +318,7 @@ class AuthService:
                 return user
 
             raise exceptions.InvalidAuthenthicationCredential
-            
+
         except Exception as e:
             log_error_with_method_info(e)
 
@@ -334,20 +340,10 @@ class AuthService:
     async def __delete_tokens_from_cookie(response: Response):
         try:
             response.set_cookie(
-                'access_token',
-                'access_token',
-                max_age=0,
-                httponly=True,
-                samesite="None",
-                secure=True
+                "access_token", "access_token", max_age=0, httponly=True, samesite="None", secure=True
             )
             response.set_cookie(
-                'refresh_token',
-                'refresh_token',
-                max_age=0,
-                httponly=True,
-                samesite="None",
-                secure=True
+                "refresh_token", "refresh_token", max_age=0, httponly=True, samesite="None", secure=True
             )
 
         except Exception as e:
@@ -368,6 +364,6 @@ class AuthService:
         try:
             await RefreshTokenDAO.delete(models.RefreshToken.user_id == user_id)
             return {"Message": f"Aborting all user {user_id} sessions was successful"}
-            
+
         except Exception as e:
             log_error_with_method_info(e)

@@ -7,8 +7,8 @@ from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 from fastapi.security import OAuth2
 from fastapi.security.utils import get_authorization_scheme_param
 
-from . import exceptions
 from ..config import settings
+from . import exceptions
 
 
 class OAuth2PasswordBearerWithCookie(OAuth2):
@@ -21,8 +21,7 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
     ):
         if not scopes:
             scopes = {}
-        flows = OAuthFlowsModel(
-            password={"tokenUrl": tokenUrl, "scopes": scopes})
+        flows = OAuthFlowsModel(password={"tokenUrl": tokenUrl, "scopes": scopes})
         super().__init__(flows=flows, scheme_name=scheme_name, auto_error=auto_error)
 
     async def __call__(self, request: Request) -> str | None:
@@ -67,9 +66,8 @@ async def validate_password(password: str, hashed_password: str) -> None:
 
     if not await __hash_password(password, salt) == hashed:
         raise exceptions.InvalidAuthenthicationCredential
-    
-    return {"Message": "Password is valid"}
 
+    return {"Message": "Password is valid"}
 
 
 async def __hash_password(password: str, salt: str = None) -> str:
@@ -85,7 +83,8 @@ async def __hash_password(password: str, salt: str = None) -> str:
     if salt is None:
         salt = await get_random_string()
     enc = hashlib.pbkdf2_hmac(
-        settings.PASSWORD_HASH_NAME, password.encode(), salt.encode(), settings.PASSWORD_HASH_ITERATIONS)
+        settings.PASSWORD_HASH_NAME, password.encode(), salt.encode(), settings.PASSWORD_HASH_ITERATIONS
+    )
 
     return enc.hex()
 
@@ -101,7 +100,5 @@ async def get_hashed_password(password: str) -> str:
     """
     salt = await get_random_string()
     hashed_password = await __hash_password(password, salt)
-    
+
     return f"{salt}${hashed_password}"
-
-

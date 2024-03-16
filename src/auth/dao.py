@@ -1,7 +1,6 @@
-from .models import User, RefreshToken
-from .schemas import RefreshTokenCreate, RefreshTokenUpdate, UserCreateDB, UserUpdate
-
 from ..dao import BaseDAO
+from .models import RefreshToken, User
+from .schemas import RefreshTokenCreate, RefreshTokenUpdate, UserCreateDB, UserUpdate
 
 
 class UserDAO(BaseDAO[User, UserCreateDB, UserUpdate]):

@@ -1,39 +1,36 @@
-from loguru import logger
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
 from sqladmin import Admin
 
-from src.auth.routers import auth_router, user_router
-from src.patient_records.routers import patient_records_router
-from src.patient.routers import patient_router
-
 from src.admin.views import PatientAdmin, PatientRecordAdmin, UserAdmin
+from src.auth.routers import auth_router, user_router
+from src.patient.routers import patient_router
+from src.patient_records.routers import patient_records_router
 
-from .database import async_engine
 from .config import settings
-
+from .database import async_engine
 
 app = FastAPI(docs_url="/secure/docs", redoc_url=None)
 
+if settings.MODE != "TEST":
+    logger.add(
+        "critical_logs.log",
+        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
+        encoding="utf-8",
+        level="CRITICAL",
+        filter=lambda record: record["level"].name == "CRITICAL",
+    )
 
-logger.add(
-    "critical_logs.log",
-    format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
-    encoding="utf-8",       
-    level="CRITICAL",
-    filter=lambda record: record["level"].name == "CRITICAL"
-)
-
-logger.add(
-    "common_logs.log",
-    format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
-    encoding="utf-8",
-    rotation="500 MB",
-    retention="7 days",
-    level="INFO",
-    filter=lambda record: record["level"].name == "INFO"
-)
+    logger.add(
+        "common_logs.log",
+        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
+        encoding="utf-8",
+        rotation="500 MB",
+        retention="7 days",
+        level="INFO",
+        filter=lambda record: record["level"].name == "INFO",
+    )
 
 
 app.add_middleware(

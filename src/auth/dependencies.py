@@ -1,20 +1,18 @@
-import jwt
 import uuid
 
+import jwt
 from fastapi import Depends
 
-from .models import User
-from .utils import OAuth2PasswordBearerWithCookie
-from .service import UserService
-from . import exceptions
 from ..config import settings
+from . import exceptions
+from .models import User
+from .service import UserService
+from .utils import OAuth2PasswordBearerWithCookie
 
 oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="/auth/login")
 
 
-async def get_current_user(
-        token: str = Depends(oauth2_scheme)
-) -> User | None:
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> User | None:
     try:
         payload: dict = jwt.decode(token, settings.TOKEN_SECRET_KEY, algorithms=[settings.ALGORITHM])
         user_id = payload.get("sub")
