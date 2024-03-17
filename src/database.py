@@ -21,7 +21,5 @@ else:
     DATABASE_PARAMS = {}
 
 
-async_engine = create_async_engine(
-    "postgresql+asyncpg://postgres:postgres@localhost:5432/clinic_test", **DATABASE_PARAMS
-)
+async_engine = create_async_engine(DATABASE_URL, **DATABASE_PARAMS)
 async_session_maker = async_sessionmaker(async_engine, expire_on_commit=False)
