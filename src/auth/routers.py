@@ -53,7 +53,7 @@ async def get_me(user: User = Depends(get_current_user)):
     return user
 
 
-@user_router.get("/get_user")
+@user_router.get("/get")
 async def get_user(
     request: Request,
     user_id: str = None,
@@ -62,7 +62,7 @@ async def get_user(
     return await UserService.get_user(token=token, user_id=user_id)
 
 
-@user_router.get("/get_all_users")
+@user_router.get("/get_all")
 async def get_all_users(
     offset: Optional[int] = 0,
     limit: Optional[int] = 100,
@@ -87,11 +87,11 @@ async def change_password(
     return await UserService.change_password(user, password)
 
 
-@user_router.delete("/deactivate_user")
+@user_router.delete("/deactivate")
 async def deactivate_user(user_id: str, superuser: User = Depends(get_current_superuser)) -> dict:
     return await UserService.deactivate_user_account(user_id=user_id)
 
 
-@user_router.delete("/delete_user")
+@user_router.delete("/delete")
 async def delete_user(user_id: str, superuser: User = Depends(get_current_superuser)) -> dict:
     return await UserService.delete_user(user_id=user_id)
