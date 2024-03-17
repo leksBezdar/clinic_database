@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from fastapi_versioning import version
 
 from ..auth.models import User
 from . import schemas
@@ -10,21 +11,25 @@ patient_router = APIRouter(prefix="/patient")
 
 
 @patient_router.post("/create", response_model=schemas.Patient)
+@version(1)
 async def create_patient(patient_data: schemas.PatientCreate, user: User = Depends(get_current_therapist)):
     return await PatientService.create_patient(patient_data=patient_data, user=user)
 
 
 @patient_router.get("/get", response_model=schemas.Patient | dict)
+@version(1)
 async def get_patient(patient_id: str, user: User = Depends(get_current_therapist)):
     return await PatientService.get_patient(patient_id=patient_id, user=user)
 
 
 @patient_router.get("/get_all", response_model=list[schemas.Patient] | list[schemas.ExplorerPatientDTO])
+@version(1)
 async def get_all_patients(limit: int = 100, offset: int = 0, user: User = Depends(get_current_user)):
     return await PatientService.get_all_patients(user=user, offset=offset, limit=limit)
 
 
 @patient_router.get("/get_all_by_therapist", response_model=list[schemas.Patient])
+@version(1)
 async def get_all_patients_by_therapist(
     limit: int = 100, offset: int = 0, user: User = Depends(get_current_therapist)
 ):
@@ -34,6 +39,7 @@ async def get_all_patients_by_therapist(
 
 
 @patient_router.patch("/update", response_model=schemas.Patient)
+@version(1)
 async def update_patient(
     patient_id: str, patient_in: schemas.PatientUpdate, user: User = Depends(get_current_therapist)
 ):
@@ -41,10 +47,12 @@ async def update_patient(
 
 
 @patient_router.delete("/delete", response_model=dict)
+@version(1)
 async def delete_patient(patient_id: str, user: User = Depends(get_current_therapist)):
     return await PatientService.delete_patient(patient_id=patient_id, user=user)
 
 
 @patient_router.delete("/delete_all", response_model=dict)
+@version(1)
 async def delete_all_patients(user: User = Depends(get_current_therapist)):
     return await PatientService.delete_all_patients(user=user)
