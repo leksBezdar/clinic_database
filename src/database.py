@@ -20,6 +20,8 @@ else:
     DATABASE_URL = settings.DATABASE_URL
     DATABASE_PARAMS = {}
 
+DATABASE_URL = settings.TEST_DATABASE_URL
+settings.MODE = "TEST"
 
 async_engine = create_async_engine(DATABASE_URL, **DATABASE_PARAMS)
 async_session_maker = async_sessionmaker(async_engine, expire_on_commit=False)

@@ -52,11 +52,11 @@ app.include_router(patient_records_router, tags=["PATIENT RECORDS"])
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
-        logger.info(f"Incoming request: {request.method} {request.url}")
+        logger.info(f"Входящий запрос: {request.method} {request.url}")
 
         response = await call_next(request)
 
-        logger.info(f"Outgoing response: {response.status_code}")
+        logger.info(f"Исходящий ответ: {response.status_code}")
 
         return response
 
@@ -65,7 +65,6 @@ app = VersionedFastAPI(
     app,
     version_format="{major}",
     prefix_format="/v{major}",
-    description="Greet users with a nice message",
     middleware=[
         (
             CORSMiddleware,
