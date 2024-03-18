@@ -43,7 +43,7 @@ class PatientService:
         cls, *filter, user: User, offset: int, limit: int, **filter_by
     ) -> list[models.Patient]:
         try:
-            logger.info(f"Терапевт {user.username} получает список всех пациентов")
+            logger.info(f"Пользователь {user.username} с ролью {user.role} получает список всех пациентов")
             patients = await PatientDAO.find_all(*filter, offset=offset, limit=limit, **filter_by)
             formatted_patients = await cls.__format_patient_data(user=user, patient_records=patients)
             return formatted_patients or []
@@ -56,7 +56,7 @@ class PatientService:
         cls, *filter, user: User, offset: int, limit: int, **filter_by
     ) -> list[models.Patient]:
         try:
-            logger.info(f"Терапевт {user.username} получает список всех пациентов")
+            logger.info(f"Терапевт {user.username} получает список всех своих пациентов")
             patients = await PatientDAO.find_all(*filter, offset=offset, limit=limit, **filter_by)
 
             return patients or []
@@ -70,7 +70,9 @@ class PatientService:
     ) -> models.Patient:
         try:
             logger.info(f"Терапевт {user.username} изменяет данные пациента {patient_id}")
-            patient = await PatientDAO.update(models.Patient.id == patient_id, obj_in=patient_in)
+            patient = await PatientDAO.update(
+                models.Patient.id == patient_id, models.Patient.therapist_id == user.id, obj_in=patient_in
+            )
             logger.info(f"Обновленные данные пациента: {patient}")
 
             return patient

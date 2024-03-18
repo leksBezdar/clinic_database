@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     def PROD_DATABASE_URL(self):
         return f"postgresql+asyncpg://{self.PROD_DB_USER}:{self.PROD_DB_PASS}@{self.PROD_DB_HOST}:{self.PROD_DB_PORT}/{self.PROD_DB_NAME}"
 
+    SENTRY_DSN: str
+
     TOKEN_SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int

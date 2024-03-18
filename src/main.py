@@ -1,3 +1,4 @@
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_versioning import VersionedFastAPI
@@ -12,6 +13,13 @@ from src.patient_records.routers import patient_records_router
 
 from .config import settings
 from .database import async_engine
+
+
+sentry_sdk.init(
+    dsn=settings.SENTRY_DSN,
+    traces_sample_rate=1.0,
+    profiles_sample_rate=1.0,
+)
 
 
 app = FastAPI(docs_url="/secure/docs", redoc_url=None, title="Clinic")

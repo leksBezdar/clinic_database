@@ -75,7 +75,7 @@ class PatientRecordsService:
             )
             if patient_record[
                 0
-            ]:  # BaseDAO.find_one_or_none returns tuple so we need to get the value from it
+            ]:  # BaseDAO.find_one_or_none returns tuple so we need to get the value from it # noqa
                 list_patient_record = []
                 list_patient_record.append(
                     patient_record[0]
