@@ -4,7 +4,7 @@
 
 # @pytest.mark.parametrize(
 #     "full_name,birthday,gender,job_title,living_place,inhabited_locality,bp,ischemia,dep",
-#     [*[("string", "string", "string", "string", "string", "string", "Нет", "Нет", "Нет")] * 3],
+#     [*[("string", "string", "string", "string", "string", "string", False, False, False)] * 3],
 # )
 # async def test_create_patient(
 #     full_name,

@@ -54,9 +54,9 @@ def upgrade() -> None:
         sa.Column("first_visit", sa.String(), nullable=True),
         sa.Column("last_visit", sa.String(), nullable=True),
         sa.Column("treatment", sa.String(), nullable=True),
-        sa.Column("bp", sa.String(), nullable=False),
-        sa.Column("ischemia", sa.String(), nullable=False),
-        sa.Column("dep", sa.String(), nullable=False),
+        sa.Column("bp", sa.Boolean(), nullable=False),
+        sa.Column("ischemia", sa.Boolean(), nullable=False),
+        sa.Column("dep", sa.Boolean(), nullable=False),
         sa.Column("patient_id", sa.UUID(), nullable=False),
         sa.Column("therapist_id", sa.UUID(), nullable=True),
         sa.ForeignKeyConstraint(

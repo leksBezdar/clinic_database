@@ -32,8 +32,8 @@ async def test_registration(username, role, password, status_code, ac: AsyncClie
                 "job_title": "string",
                 "living_place": "string",
                 "inhabited_locality": "string",
-                "bp": "Нет",
-                "ischemia": "Нет",
-                "dep": "Нет",
+                "bp": False,
+                "ischemia": False,
+                "dep": False,
             }
             response = await ac.post("v1/patient/create", cookies=access_token, json=json)

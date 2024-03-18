@@ -11,9 +11,9 @@ class PatientBase(BaseModel):
     living_place: str | None = None
     inhabited_locality: str | None = None
 
-    bp: str = "Нет"
-    ischemia: str = "Нет"
-    dep: str = "Нет"
+    bp: bool = False
+    ischemia: bool = False
+    dep: bool = False
 
 
 class PatientCreate(PatientBase):

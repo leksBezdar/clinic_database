@@ -40,9 +40,9 @@ class ExplorerPatientDTO(BaseModel):
     inhabited_locality: str | None = None
     diagnosis: str | None = None
     treatment: str | None = None
-    bp: str = "Нет"
-    ischemia: str = "Нет"
-    dep: str = "Нет"
+    bp: bool = False
+    ischemia: bool = False
+    dep: bool = False
 
     class Config:
         from_attributes = True

@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from sqlalchemy import UUID, ForeignKey
+from sqlalchemy import UUID, ForeignKey, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
@@ -23,9 +23,9 @@ class Patient(Base):
     job_title: Mapped[str_null]
     inhabited_locality: Mapped[str_null]
 
-    bp: Mapped[str_not_null]
-    ischemia: Mapped[str_not_null]
-    dep: Mapped[str_not_null]
+    bp: Mapped[bool] = mapped_column(default=False, server_default=false())
+    ischemia: Mapped[bool] = mapped_column(default=False, server_default=false())
+    dep: Mapped[bool] = mapped_column(default=False, server_default=false())
 
     therapist_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id", ondelete="CASCADE"))
 
