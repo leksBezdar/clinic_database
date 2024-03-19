@@ -1,6 +1,10 @@
 import inspect
 
+from fastapi import Depends, HTTPException
+from fastapi.security import APIKeyQuery
 from loguru import logger
+
+from .config import settings
 
 
 def log_error_with_method_info(exception: Exception):
@@ -25,3 +29,12 @@ def log_error_with_method_info(exception: Exception):
     )
 
     raise exception
+
+
+api_key_query = APIKeyQuery(name="key", auto_error=False)
+
+
+async def get_api_key(api_key: str = Depends(api_key_query)):
+    if api_key != settings.API_KEY:
+        raise HTTPException(status_code=403, detail="Forbidden for you")
+    return api_key

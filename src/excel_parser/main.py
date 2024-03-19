@@ -31,11 +31,11 @@ class PatientRecordsBase(BaseModel):
     patient_id: uuid.UUID | str
 
 
-BASE_URL = "https://clinic.universal-hub.site"  # noqa
+BASE_URL = "https://clinic.universal-hub.site/v1"  # noqa
 # BASE_URL = "http://localhost:8000" # noqa
 excel_file_path = "C:\\Users\\user\\Desktop\\ключи\\Extrapiramidnaya_Patologia_1.xlsx"
 
-therapist_login_data = {"username": "admin", "password": "admin"}
+therapist_login_data = {"username": "string", "password": "string"}
 
 
 async def main():
@@ -51,7 +51,7 @@ async def main():
 
                 cookies = session.cookie_jar.filter_cookies(BASE_URL)
 
-                for i, row in enumerate(sheet.iter_rows(min_row=2, max_row=10, values_only=True), start=1):
+                for i, row in enumerate(sheet.iter_rows(min_row=2, max_row=5337, values_only=True), start=1):
                     birthday = row[2]
                     diagnosis = row[7]
                     living_place = row[5]
@@ -74,9 +74,9 @@ async def main():
                                 continue
 
                     if diagnosis:
-                        bp = "Да" if re.search(r"\bбп\b", diagnosis, flags=re.IGNORECASE) else "Нет"
-                        ischemia = "Да" if re.search(r"\bишемия\b", diagnosis, flags=re.IGNORECASE) else "Нет"
-                        dep = "Да" if re.search(r"\bд[эе]п\b", diagnosis, flags=re.IGNORECASE) else "Нет"
+                        bp = True if re.search(r"\bбп\b", diagnosis, flags=re.IGNORECASE) else False
+                        ischemia = True if re.search(r"\bишемия\b", diagnosis, flags=re.IGNORECASE) else False
+                        dep = True if re.search(r"\bд[эе]п\b", diagnosis, flags=re.IGNORECASE) else False
 
                     inhabited_locality = "Неопределено"
                     if living_place:
@@ -98,7 +98,7 @@ async def main():
                     patient_data_json = patient_data.model_dump()
 
                     async with session.post(
-                        f"{BASE_URL}/patient_router/create_patient", json=patient_data_json, cookies=cookies
+                        f"{BASE_URL}/patient/create", json=patient_data_json, cookies=cookies
                     ) as response:
                         if response.status != 200:
                             print(f"Failed to create patient {i}: {response.status}")
@@ -124,7 +124,7 @@ async def main():
                     last_patient_record_data_json = last_patient_record_data.model_dump()
 
                     async with session.post(
-                        f"{BASE_URL}/patient_records_router/create_patient_record",
+                        f"{BASE_URL}/patient_records/create",
                         json=first_patient_record_data_json,
                         cookies=cookies,
                     ) as response:
@@ -133,7 +133,7 @@ async def main():
                             continue
 
                     async with session.post(
-                        f"{BASE_URL}/patient_records_router/create_patient_record",
+                        f"{BASE_URL}/patient_records/create",
                         json=last_patient_record_data_json,
                         cookies=cookies,
                     ) as response:

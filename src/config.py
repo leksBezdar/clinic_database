@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     MODE: Literal["DEV", "TEST", "PROD"]
     LOG_LEVEL: str
 
+    API_KEY: str
+
     DB_HOST: str
     DB_PORT: str
     DB_NAME: str

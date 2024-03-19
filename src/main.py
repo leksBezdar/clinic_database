@@ -1,6 +1,8 @@
 import sentry_sdk
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import HTMLResponse
 from fastapi_versioning import VersionedFastAPI
 from loguru import logger
 from sqladmin import Admin
@@ -13,6 +15,7 @@ from src.patient_records.routers import patient_records_router
 
 from .config import settings
 from .database import async_engine
+from .utils import get_api_key
 
 
 sentry_sdk.init(
@@ -48,6 +51,11 @@ app.include_router(auth_router, tags=["AUTH"])
 app.include_router(user_router, tags=["USER"])
 app.include_router(patient_router, tags=["PATIENT"])
 app.include_router(patient_records_router, tags=["PATIENT RECORDS"])
+
+
+@app.get("/secure/docs", response_class=HTMLResponse)
+async def get_docs(api_key: str = Depends(get_api_key)):
+    return get_swagger_ui_html(openapi_url="/openapi.json", title="Clinic API Documentation")
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
