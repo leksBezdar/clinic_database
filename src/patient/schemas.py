@@ -32,9 +32,9 @@ class PatientUpdate(BaseModel):
     living_place: str | None = None
     inhabited_locality: str | None = None
 
-    bp: str | None = None
-    ischemia: str | None = None
-    dep: str | None = None
+    bp: bool | None = None
+    ischemia: bool | None = None
+    dep: bool | None = None
 
 
 class Patient(PatientBase):
@@ -49,9 +49,9 @@ class ExplorerPatientDTO(BaseModel):
     birthday: str
     gender: str
     inhabited_locality: str | None = None
-    bp: str = "Нет"
-    ischemia: str = "Нет"
-    dep: str = "Нет"
+    bp: bool = "Нет"
+    ischemia: bool = "Нет"
+    dep: bool = "Нет"
 
     class Config:
         from_attributes = True

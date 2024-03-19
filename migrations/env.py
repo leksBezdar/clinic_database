@@ -9,8 +9,8 @@ from sqlalchemy import engine_from_config, pool
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from src.auth.models import RefreshToken, User  # noqa
+from src.base import Base
 from src.config import settings
-from src.database import Base
 from src.patient.models import Patient  # noqa
 from src.patient_records.models import PatientRecord  # noqa
 

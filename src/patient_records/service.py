@@ -73,9 +73,13 @@ class PatientRecordsService:
                     **filter_by,
                 ),
             )
-            if patient_record[0]:  # BaseDAO.find_one_or_none возвращает кортеж, поэтому нужно достать значение # noqa
+            if patient_record[
+                0
+            ]:  # BaseDAO.find_one_or_none возвращает кортеж, поэтому нужно достать значение # noqa
                 list_patient_record = []
-                list_patient_record.append(patient_record[0])  # __format_patient_data трубует список с типом list[PatientRecord] # noqa
+                list_patient_record.append(
+                    patient_record[0]
+                )  # __format_patient_data трубует список с типом list[PatientRecord] # noqa
                 return await cls.__format_patient_data(user=user, patient_records=list_patient_record)
             return {"Message": "Запись не найдена"}
 

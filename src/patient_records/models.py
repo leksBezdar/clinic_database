@@ -4,17 +4,15 @@ from typing import Annotated
 from sqlalchemy import UUID, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ..database import Base
+from ..base import Base, BaseIDMixin
 
 
 str_null = Annotated[str, mapped_column(nullable=True)]
 str_not_null = Annotated[str, mapped_column(nullable=False)]
 
 
-class PatientRecord(Base):
-    __tablename__ = "patient_records"
+class PatientRecord(Base, BaseIDMixin):
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True, index=True, default=uuid.uuid4)
     diagnosis: Mapped[str_null]
     visit: Mapped[str]
     treatment: Mapped[str_null]

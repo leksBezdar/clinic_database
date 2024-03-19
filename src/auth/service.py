@@ -3,8 +3,9 @@ from datetime import datetime, timedelta, timezone
 
 import jwt
 from fastapi import Response
-from sqlalchemy import or_
 from loguru import logger
+from sqlalchemy import or_
+
 from ..config import settings
 from ..utils import log_error_with_method_info
 from . import exceptions, models, schemas, utils
@@ -85,7 +86,9 @@ class UserService:
             log_error_with_method_info(e)
 
     @classmethod
-    async def get_all_users(cls, *filter, offset: int, limit: int, user: models.User, **filter_by) -> list[models.User]:
+    async def get_all_users(
+        cls, *filter, offset: int, limit: int, user: models.User, **filter_by
+    ) -> list[models.User]:
         try:
             logger.info(f"Пользователь {user.username} получает данные о всех пользователях")
             return await UserDAO.find_all(*filter, offset=offset, limit=limit, **filter_by)
@@ -128,7 +131,9 @@ class UserService:
             user = await cls.get_user(user_id=user_id)
             if not user:
                 raise exceptions.UserDoesNotExist
-            logger.info(f"Администратор {superuser.username} выдает роль пользователю {user.username}: {new_role}")
+            logger.info(
+                f"Администратор {superuser.username} выдает роль пользователю {user.username}: {new_role}"
+            )
             await UserDAO.update(models.User.id == user.id, obj_in={"role": new_role})
             return {"Message": f"Пользователь {user.username} теперь имеет роль {new_role}"}
 
@@ -333,7 +338,6 @@ class AuthService:
             await cls.__delete_tokens_db(token)
             await cls.__delete_tokens_from_cookie(response)
             logger.info(f"Пользователь {user.username} вышел из системы")
-
 
             return {"Message": "Выход из системы прошел успешно"}
 

@@ -6,7 +6,8 @@ from pydantic import BaseModel
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import SQLAlchemyError
 
-from .database import Base, async_session_maker
+from .base import Base
+from .database import async_session_maker
 
 
 ModelType = TypeVar("ModelType", bound=Base)

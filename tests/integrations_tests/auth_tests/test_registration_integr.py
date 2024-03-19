@@ -19,9 +19,8 @@ async def test_registration(username, role, password, status_code, ac: AsyncClie
         response = await ac.post("v1/auth/login", json={"username": username, "password": password})
         assert response.status_code == 200
         assert response.cookies["access_token"]
-        token_value = response.cookies["access_token"]
-        token_value = token_value[1:]
-        token_value = token_value[:-1]
+        token_value = response.cookies["access_token"][1:-1]
+
         access_token = {"access_token": token_value}
 
         if response.status_code == 200:
