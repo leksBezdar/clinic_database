@@ -92,7 +92,7 @@ class PatientService:
             log_error_with_method_info(e)
 
     @classmethod
-    async def delete_all_patients(cls, user: User) -> dict:
+    async def delete_all_patients(cls, superuser: User) -> dict:
         await PatientDAO.delete()
         return {"message": "успех"}
 

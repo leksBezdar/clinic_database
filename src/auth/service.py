@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from fastapi import Response
 from sqlalchemy import or_
-
+from loguru import logger
 from ..config import settings
 from ..utils import log_error_with_method_info
 from . import exceptions, models, schemas, utils
@@ -85,8 +85,9 @@ class UserService:
             log_error_with_method_info(e)
 
     @classmethod
-    async def get_all_users(cls, *filter, offset: int, limit: int, **filter_by) -> list[models.User]:
+    async def get_all_users(cls, *filter, offset: int, limit: int, user: models.User, **filter_by) -> list[models.User]:
         try:
+            logger.info(f"Пользователь {user.username} получает данные о всех пользователях")
             return await UserDAO.find_all(*filter, offset=offset, limit=limit, **filter_by)
 
         except Exception as e:
@@ -101,9 +102,9 @@ class UserService:
             log_error_with_method_info(e)
 
     @classmethod
-    async def set_user_role(cls, user_id: str, new_role: str) -> dict:
+    async def set_user_role(cls, user_id: str, new_role: str, superuser: models.User) -> dict:
         try:
-            return await cls.__set_user_role(user_id, new_role)
+            return await cls.__set_user_role(user_id, new_role, superuser)
 
         except Exception as e:
             log_error_with_method_info(e)
@@ -116,20 +117,20 @@ class UserService:
                 raise exceptions.UserDoesNotExist
 
             await UserDAO.update(models.User.id == user.id, obj_in={"is_superuser": not (user.is_superuser)})
-            return {"Message": f"User {user_id} now has superuser status: {not (user.is_superuser)}"}
+            return {"Message": f"Пользователь {user_id} теперь имеет статус: {not (user.is_superuser)}"}
 
         except Exception as e:
             log_error_with_method_info(e)
 
     @classmethod
-    async def __set_user_role(cls, user_id: str, new_role: str) -> dict:
+    async def __set_user_role(cls, user_id: str, new_role: str, superuser: models.User) -> dict:
         try:
             user = await cls.get_user(user_id=user_id)
             if not user:
                 raise exceptions.UserDoesNotExist
-
+            logger.info(f"Администратор {superuser.username} выдает роль пользователю {user.username}: {new_role}")
             await UserDAO.update(models.User.id == user.id, obj_in={"role": new_role})
-            return {"Message": f"User {user_id} now has role {new_role}"}
+            return {"Message": f"Пользователь {user.username} теперь имеет роль {new_role}"}
 
         except Exception as e:
             log_error_with_method_info(e)
@@ -140,6 +141,7 @@ class UserService:
             await utils.validate_password(password.old_password, user.hashed_password)
             new_hashed_password = await utils.get_hashed_password(password.new_password)
             await UserDAO.update(models.User.id == user.id, obj_in={"hashed_password": new_hashed_password})
+            logger.info(f"Пользователь {user.username} сменил пароль")
             return {"message": "Пароль был изменен успешно"}
 
         except Exception as e:
@@ -161,7 +163,7 @@ class UserService:
                 raise exceptions.UserDoesNotExist
 
             await UserDAO.update(models.User.id == user_id, obj_in={"is_active": False})
-            return {"Message": f"User {user_id} was deleted successfuly"}
+            return {"Message": f"Статус пользователя {user_id} был изменен на 'Неактивен'"}
 
         except Exception as e:
             log_error_with_method_info(e)
@@ -170,7 +172,7 @@ class UserService:
     async def delete_user(cls, user_id: uuid.UUID) -> dict:
         try:
             await UserDAO.delete(models.User.id == user_id)
-            return {"Message": f"Superuser deleted {user_id} successfuly"}
+            return {"Message": f"Администратор удалил пользователя с идентификатором {user_id} успешно"}
 
         except Exception as e:
             log_error_with_method_info(e)
@@ -312,9 +314,9 @@ class AuthService:
     async def authenticate_user(cls, username: str, password: str, response: Response) -> models.User:
         try:
             user = await UserDAO.find_one_or_none(username=username)
-
             if user and await utils.validate_password(password, user.hashed_password):
                 await cls.create_tokens(user.id, response)
+                logger.info(f"Пользователь {user.username} вошел в систему")
                 return user
 
             raise exceptions.InvalidAuthenthicationCredential
@@ -323,15 +325,17 @@ class AuthService:
             log_error_with_method_info(e)
 
     @classmethod
-    async def logout(cls, token: uuid.UUID, response: Response) -> dict:
+    async def logout(cls, token: uuid.UUID, response: Response, user: models.User) -> dict:
         try:
             if token is None:
                 raise exceptions.Unauthorized
 
             await cls.__delete_tokens_db(token)
             await cls.__delete_tokens_from_cookie(response)
+            logger.info(f"Пользователь {user.username} вышел из системы")
 
-            return {"Message": "logout was successful"}
+
+            return {"Message": "Выход из системы прошел успешно"}
 
         except Exception as e:
             log_error_with_method_info(e)
@@ -363,7 +367,7 @@ class AuthService:
     async def abort_all_sessions(cls, user_id: uuid.UUID):
         try:
             await RefreshTokenDAO.delete(models.RefreshToken.user_id == user_id)
-            return {"Message": f"Aborting all user {user_id} sessions was successful"}
+            return {"Message": f"Все сессии пользователя с идентафикатором {user_id} были завершены успешно"}
 
         except Exception as e:
             log_error_with_method_info(e)

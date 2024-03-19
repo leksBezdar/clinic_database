@@ -31,3 +31,8 @@ async def get_current_superuser(current_user: User = Depends(get_current_user)) 
     if not current_user.is_superuser:
         raise exceptions.Forbidden
     return current_user
+
+async def get_current_active_user(active_user: User = Depends(get_current_user)) -> User:
+    if not active_user.is_active:
+        raise exceptions.Forbidden
+    return active_user

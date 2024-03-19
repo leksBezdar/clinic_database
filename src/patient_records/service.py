@@ -73,15 +73,11 @@ class PatientRecordsService:
                     **filter_by,
                 ),
             )
-            if patient_record[
-                0
-            ]:  # BaseDAO.find_one_or_none returns tuple so we need to get the value from it # noqa
+            if patient_record[0]:  # BaseDAO.find_one_or_none возвращает кортеж, поэтому нужно достать значение # noqa
                 list_patient_record = []
-                list_patient_record.append(
-                    patient_record[0]
-                )  # __format_patient_data require list[PatientRecord]
+                list_patient_record.append(patient_record[0])  # __format_patient_data трубует список с типом list[PatientRecord] # noqa
                 return await cls.__format_patient_data(user=user, patient_records=list_patient_record)
-            return None
+            return {"Message": "Запись не найдена"}
 
         except Exception as e:
             log_error_with_method_info(e)
@@ -160,7 +156,7 @@ class PatientRecordsService:
             log_error_with_method_info(e)
 
     @classmethod
-    async def delete_all_patient_records(cls, user: User) -> dict:
+    async def delete_all_patient_records(cls, superuser: User) -> dict:
         await PatientRecordsDAO.delete()
         return {"message": "успех"}
 

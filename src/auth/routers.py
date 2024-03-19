@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Request, Response, status
 from fastapi_versioning import version
 
 from . import schemas
-from .dependencies import get_current_superuser, get_current_user
+from .dependencies import get_current_active_user, get_current_superuser, get_current_user
 from .models import User
 from .service import AuthService, UserService
 
@@ -35,14 +35,14 @@ async def login(response: Response, user: schemas.LoginIn) -> schemas.UserGet:
 
 @auth_router.post("/logout")
 @version(1)
-async def logout(request: Request, response: Response):
+async def logout(request: Request, response: Response, user: User = Depends(get_current_active_user)):
     token = request.cookies.get("refresh_token")
-    return await AuthService.logout(token, response)
+    return await AuthService.logout(token, response, user)
 
 
 @auth_router.put("/refresh_token")
 @version(1)
-async def refresh_token(response: Response, request: Request) -> dict:
+async def refresh_token(response: Response, request: Request, user: User = Depends(get_current_active_user)) -> dict:
     token = request.cookies.get("refresh_token")
     return await AuthService.refresh_token(response, token)
 
@@ -77,8 +77,9 @@ async def get_all_users(
     offset: Optional[int] = 0,
     limit: Optional[int] = 100,
     is_active: bool = True,
+    user: User = Depends(get_current_active_user)
 ) -> list[schemas.UserGet]:
-    return await UserService.get_all_users(is_active=is_active, offset=offset, limit=limit)
+    return await UserService.get_all_users(is_active=is_active, offset=offset, limit=limit, user=user)
 
 
 @user_router.patch("/set_user_role")
@@ -88,7 +89,7 @@ async def set_user_role(
     new_role: schemas.UserRole,
     superuser: User = Depends(get_current_superuser),
 ) -> dict:
-    return await UserService.set_user_role(user_id=user_id, new_role=new_role)
+    return await UserService.set_user_role(user_id=user_id, new_role=new_role, superuser=superuser)
 
 
 @user_router.patch("/change_password")

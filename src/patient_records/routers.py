@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi_versioning import version
 
-from ..auth.dependencies import get_current_user
+from ..auth.dependencies import get_current_superuser, get_current_user
 from ..auth.models import User
 from . import schemas
 from .dependencies import get_current_therapist
@@ -21,7 +21,7 @@ async def create_patient_record(
     )
 
 
-# @patient_records_router.get("/get", response_model=schemas.PatientRecords | schemas.ExplorerPatientDTO | None)  # noqa
+# @patient_records_router.get("/get", response_model=schemas.PatientRecords | schemas.ExplorerPatientDTO | dict)  # noqa
 # @version(1)
 # async def get_one_patient_record(
 #     patient_id: str, patient_record_id: str, user: User = Depends(get_current_user)
@@ -90,5 +90,5 @@ async def delete_patient_record(
 
 @patient_records_router.delete("/delete_all")
 @version(1)
-async def delete_all_patient_records(user: User = Depends(get_current_therapist)):
-    return await PatientRecordsService.delete_all_patient_records(user=user)
+async def delete_all_patient_records(superuser: User = Depends(get_current_superuser)):
+    return await PatientRecordsService.delete_all_patient_records(superuser=superuser)
