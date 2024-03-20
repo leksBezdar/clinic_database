@@ -32,8 +32,10 @@ class PatientService:
     async def get_patient(cls, patient_id: uuid.UUID, user: User) -> models.Patient:
         try:
             patient = await PatientDAO.find_one_or_none(models.Patient.id == patient_id)
-            logger.info(f"Терапевт {user.username} получает данные пациента {patient.full_name}")
-            return patient or {"message": "Пациент не найден"}
+            if patient:
+                logger.info(f"Терапевт {user.username} получает данные пациента {patient.full_name}")
+                return patient
+            return {"message": "Пациент не найден"}
 
         except Exception as e:
             log_error_with_method_info(e)

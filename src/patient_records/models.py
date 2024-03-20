@@ -17,7 +17,9 @@ class PatientRecord(Base, BaseIDMixin):
     visit: Mapped[str]
     treatment: Mapped[str_null]
 
-    patient_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("patients.id"))
+    patient_id: Mapped[uuid.UUID] = mapped_column(
+        UUID, ForeignKey("patients.id", ondelete="CASCADE"), nullable=True
+    )
     therapist_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id"), nullable=True)
 
     patient = relationship("Patient", back_populates="records")

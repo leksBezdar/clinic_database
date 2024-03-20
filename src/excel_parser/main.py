@@ -31,7 +31,7 @@ class PatientRecordsBase(BaseModel):
     patient_id: uuid.UUID | str
 
 
-BASE_URL = "https://clinic.universal-hub.site/v1"  # noqa
+BASE_URL = "https://clinic.universal-hub.site"  # noqa
 # BASE_URL = "http://localhost:8000" # noqa
 excel_file_path = "C:\\Users\\user\\Desktop\\ключи\\Extrapiramidnaya_Patologia_1.xlsx"
 
