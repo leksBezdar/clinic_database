@@ -7,6 +7,7 @@ from loguru import logger
 from sqladmin import Admin
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from src.admin.admin import authentication_backend
 from src.admin.views import PatientAdmin, PatientRecordAdmin, UserAdmin
 from src.auth.routers import auth_router, user_router
 from src.patient.routers import patient_router
@@ -77,7 +78,7 @@ if settings.MODE != "TEST":
         filter=lambda record: record["level"].name == "INFO",
     )
 
-admin = Admin(app, async_engine)
+admin = Admin(app, async_engine, authentication_backend=authentication_backend)
 
 admin.add_view(UserAdmin)
 admin.add_view(PatientAdmin)

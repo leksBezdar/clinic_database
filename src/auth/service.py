@@ -224,7 +224,7 @@ class AuthService:
                 max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
                 httponly=True,
                 samesite="None",
-                secure=True,
+                # secure=True,
             )
             response.set_cookie(
                 "refresh_token",
@@ -232,7 +232,7 @@ class AuthService:
                 max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 30 * 24 * 60,
                 httponly=True,
                 samesite="None",
-                secure=True,
+                # secure=True,
             )
 
         except Exception as e:
@@ -316,12 +316,24 @@ class AuthService:
             log_error_with_method_info(e)
 
     @classmethod
-    async def authenticate_user(cls, username: str, password: str, response: Response) -> models.User:
+    async def login(cls, username: str, password: str, response: Response) -> models.User:
+        try:
+            user = await cls.authenticate_user(username, password)
+            if user:
+                await cls.create_tokens(user.id, response)
+                logger.info(f"Пользователь {user.username} вошел в систему")
+                return user
+
+            raise exceptions.InvalidAuthenthicationCredential
+
+        except Exception as e:
+            log_error_with_method_info(e)
+
+    @classmethod
+    async def authenticate_user(cls, username: str, password: str) -> models.User:
         try:
             user = await UserDAO.find_one_or_none(username=username)
             if user and await utils.validate_password(password, user.hashed_password):
-                await cls.create_tokens(user.id, response)
-                logger.info(f"Пользователь {user.username} вошел в систему")
                 return user
 
             raise exceptions.InvalidAuthenthicationCredential

@@ -26,7 +26,7 @@ async def registration(user: schemas.UserCreate) -> schemas.UserGet:
 
 @auth_router.post("/login")
 async def login(response: Response, user: schemas.LoginIn) -> schemas.UserGet:
-    return await AuthService.authenticate_user(user.username, user.password, response)
+    return await AuthService.login(user.username, user.password, response)
 
 
 @auth_router.post("/logout")

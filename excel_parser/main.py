@@ -8,6 +8,8 @@ import aiohttp
 import openpyxl
 from pydantic import BaseModel
 
+from excel_parser.constants import BASE_URL, EXCEL_FILE_PATH, THERAPIST_LOGIN_DATA
+
 
 class PatientBase(BaseModel):
     full_name: str
@@ -31,20 +33,13 @@ class PatientRecordsBase(BaseModel):
     patient_id: uuid.UUID | str
 
 
-BASE_URL = "https://clinic.universal-hub.site"  # noqa
-# BASE_URL = "http://localhost:8000" # noqa
-excel_file_path = "C:\\Users\\user\\Desktop\\ключи\\Extrapiramidnaya_Patologia_1.xlsx"
-
-therapist_login_data = {"username": "string", "password": "string"}
-
-
 async def main():
     async def process_excel_file(file_path):
         wb = openpyxl.load_workbook(file_path)
         sheet = wb["Лист1"]
 
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
-            async with session.post(f"{BASE_URL}/auth/login", json=therapist_login_data) as response:
+            async with session.post(f"{BASE_URL}/auth/login", json=THERAPIST_LOGIN_DATA) as response:
                 if response.status != 200:
                     (f"Failed to authenticate: {response.status}")
                     return
@@ -143,7 +138,7 @@ async def main():
 
         wb.close()
 
-    await process_excel_file(excel_file_path)
+    await process_excel_file(EXCEL_FILE_PATH)
 
 
 if __name__ == "__main__":
