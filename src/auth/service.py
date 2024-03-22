@@ -224,7 +224,7 @@ class AuthService:
                 max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
                 httponly=True,
                 samesite="None",
-                # secure=True,
+                secure=True,
             )
             response.set_cookie(
                 "refresh_token",
@@ -232,7 +232,7 @@ class AuthService:
                 max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 30 * 24 * 60,
                 httponly=True,
                 samesite="None",
-                # secure=True,
+                secure=True,
             )
 
         except Exception as e:
