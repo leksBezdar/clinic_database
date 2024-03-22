@@ -27,6 +27,9 @@ class User(Base, BaseIDMixin):
 
     patients: Mapped[list["Patient"]] = relationship("Patient", back_populates="therapist")
 
+    def __str__(self):
+        return self.username
+
 
 class RefreshToken(Base):
 

@@ -39,17 +39,16 @@ class AdminAuth(AuthenticationBackend):
 
     async def logout(self, request: Request) -> bool:
         request.session.clear()
-        return RedirectResponse(request.url_for("admin:login"), status_code=302)
+        return RedirectResponse("/admin/login", status_code=302)
 
     async def authenticate(self, request: Request) -> bool:
-        token = request.session.get("token").split()[1]
+        token = request.session.get("token")
         if not token:
-            return RedirectResponse(request.url_for("admin:login"), status_code=302)
-
+            return RedirectResponse("/admin/login", status_code=302)
+        token = token.split()[1]
         user = await get_current_user(token)
         if not user:
-            return RedirectResponse(request.url_for("admin:login"), status_code=302)
-
+            return RedirectResponse("/admin/login", status_code=302)
         return True
 
 
