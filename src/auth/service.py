@@ -224,7 +224,7 @@ class AuthService:
                 max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
                 httponly=True,
                 samesite="None",
-                secure=True,
+                secure=settings.SECURE_COOKIE,
             )
             response.set_cookie(
                 "refresh_token",
@@ -232,7 +232,7 @@ class AuthService:
                 max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 30 * 24 * 60,
                 httponly=True,
                 samesite="None",
-                secure=True,
+                secure=settings.SECURE_COOKIE,
             )
 
         except Exception as e:
@@ -360,10 +360,20 @@ class AuthService:
     async def __delete_tokens_from_cookie(response: Response):
         try:
             response.set_cookie(
-                "access_token", "access_token", max_age=0, httponly=True, samesite="None", secure=True
+                "access_token",
+                "access_token",
+                max_age=0,
+                httponly=True,
+                samesite="None",
+                secure=settings.SECURE_COOKIE,
             )
             response.set_cookie(
-                "refresh_token", "refresh_token", max_age=0, httponly=True, samesite="None", secure=True
+                "refresh_token",
+                "refresh_token",
+                max_age=0,
+                httponly=True,
+                samesite="None",
+                secure=settings.SECURE_COOKIE,
             )
 
         except Exception as e:
