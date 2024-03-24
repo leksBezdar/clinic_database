@@ -6,12 +6,14 @@ from sqlalchemy import *  # noqa
 
 from src.auth.models import *  # noqa
 from src.base import Base  # noqa
-from src.config import settings
-from src.conftest import *  # Нужно для переопределения settings.MODE, иначе DSN определится раньше. Должна стоять выше импорта src.config. # noqa
 from src.database import async_engine
 from src.main import app as fastapi_app
 from src.patient.models import *  # noqa
 from src.patient_records.models import *  # noqa
+
+
+from src.conftest import *  # Нужно для переопределения settings.MODE, иначе DSN определится раньше. Должна стоять выше импорта src.config. # isort:skip # noqa
+from src.config import settings  # isort:skip # noqa
 
 
 @pytest.fixture(autouse=True, scope="session")

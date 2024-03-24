@@ -36,9 +36,7 @@ async def logout(request: Request, response: Response, user: User = Depends(get_
 
 
 @auth_router.put("/refresh_token")
-async def refresh_token(
-    response: Response, request: Request, user: User = Depends(get_current_active_user)
-) -> dict:
+async def refresh_token(response: Response, request: Request) -> dict:
     token = request.cookies.get("refresh_token")
     return await AuthService.refresh_token(response, token)
 

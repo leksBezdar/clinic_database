@@ -223,7 +223,7 @@ class AuthService:
                 access_token,
                 max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
                 httponly=True,
-                samesite="None",
+                samesite=settings.SAMESITE_COOKIE,
                 secure=settings.SECURE_COOKIE,
             )
             response.set_cookie(
@@ -231,7 +231,7 @@ class AuthService:
                 refresh_token,
                 max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 30 * 24 * 60,
                 httponly=True,
-                samesite="None",
+                samesite=settings.SAMESITE_COOKIE,
                 secure=settings.SECURE_COOKIE,
             )
 
@@ -364,7 +364,7 @@ class AuthService:
                 "access_token",
                 max_age=0,
                 httponly=True,
-                samesite="None",
+                samesite=settings.SAMESITE_COOKIE,
                 secure=settings.SECURE_COOKIE,
             )
             response.set_cookie(
@@ -372,7 +372,7 @@ class AuthService:
                 "refresh_token",
                 max_age=0,
                 httponly=True,
-                samesite="None",
+                samesite=settings.SAMESITE_COOKIE,
                 secure=settings.SECURE_COOKIE,
             )
 
