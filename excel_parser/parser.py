@@ -14,7 +14,7 @@ from schemas import PatientBase, PatientRecordsBase
 class DataParser:
 
     @staticmethod
-    def parse_birthday(birthday: str) -> str:
+    async def parse_birthday(birthday: str) -> str:
         if isinstance(birthday, datetime):
             return str(birthday.date())
         elif birthday in (None, "-", "нет даты"):
@@ -26,19 +26,23 @@ class DataParser:
                 return str(datetime.now().date())
 
     @staticmethod
-    def parse_living_place(living_place: str) -> str | None:
+    async def parse_living_place(living_place: str) -> str | None:
         return living_place.strip() if living_place else None
 
     @staticmethod
-    def parse_diagnosis(diagnosis: str | None) -> tuple[bool, bool, bool]:
-        bp = bool(re.search(r"\bбп\b", diagnosis, flags=re.IGNORECASE)) if diagnosis else False
-        ischemia = bool(re.search(r"\bишемия\b", diagnosis, flags=re.IGNORECASE)) if diagnosis else False
-        dep = bool(re.search(r"\bд[эе]п\b", diagnosis, flags=re.IGNORECASE)) if diagnosis else False
-
-        return dep, bp, ischemia
+    async def parse_diagnosis(diagnosis: str | None) -> tuple[bool, bool, bool]:
+        return (
+            await DataParser.check_diagnosis(diagnosis, r"\bд[эе]п\b"),
+            await DataParser.check_diagnosis(diagnosis, r"\bбп\b"),
+            await DataParser.check_diagnosis(diagnosis, r"\bишемия\b"),
+        )
 
     @staticmethod
-    def determine_inhabited_locality(living_place: str) -> str:
+    async def check_diagnosis(diagnosis: str | None, pattern: str) -> bool:
+        return bool(re.search(pattern, diagnosis, flags=re.IGNORECASE)) if diagnosis else False
+
+    @staticmethod
+    async def determine_inhabited_locality(living_place: str) -> str:
         if living_place and living_place.strip().startswith(("г", "Г")):
             return "Город"
         return "Село" if living_place else "Неопределено"
@@ -50,10 +54,12 @@ class RowProcessor:
     async def process_row(cls, row: tuple[str], cookies: BaseCookie, session: aiohttp.ClientSession) -> None:
         try:
             diagnosis = row[7]
-            birthday = DataParser.parse_birthday(row[2])
-            living_place = DataParser.parse_living_place(row[5])
-            dep, bp, ischemia = DataParser.parse_diagnosis(diagnosis)
-            inhabited_locality = DataParser.determine_inhabited_locality(living_place)
+            birthday = await DataParser.parse_birthday(row[2])
+            living_place = await DataParser.parse_living_place(row[5])
+            first_visit, last_visit = str(row[9]), str(row[8])
+            treatment = row[10]
+            dep, bp, ischemia = await DataParser.parse_diagnosis(diagnosis)
+            inhabited_locality = await DataParser.determine_inhabited_locality(living_place)
 
             patient_data = PatientBase(
                 full_name=row[0],
@@ -71,11 +77,11 @@ class RowProcessor:
             patient_id = response["id"]
 
             first_patient_record_data = PatientRecordsBase(
-                visit=str(row[9]), diagnosis=diagnosis, treatment=row[10], patient_id=patient_id
+                visit=first_visit, diagnosis=diagnosis, treatment=treatment, patient_id=patient_id
             )
 
             last_patient_record_data = PatientRecordsBase(
-                visit=str(row[8]), diagnosis=diagnosis, treatment=row[10], patient_id=patient_id
+                visit=last_visit, diagnosis=diagnosis, treatment=treatment, patient_id=patient_id
             )
 
             await asyncio.gather(
