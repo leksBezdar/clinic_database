@@ -1,8 +1,9 @@
+import os
 import asyncio
-from parser import ExcelParser
-
+from .parser import ExcelParser
 
 async def main():
+    os.environ["SECURE_COOKIE"] = "False"
     await ExcelParser.process_excel_file()
 
 

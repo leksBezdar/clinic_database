@@ -2,8 +2,8 @@ from http.cookies import SimpleCookie
 
 import aiohttp
 from aiohttp import ClientSession
-from constants import BASE_URL, THERAPIST_LOGIN_DATA
-from schemas import PatientBase, PatientRecordsBase
+from .constants import BASE_URL, THERAPIST_LOGIN_DATA
+from .schemas import PatientBase, PatientRecordsBase
 
 
 class APIClient:
