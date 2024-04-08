@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from async_lru import alru_cache
 
 from ..auth.dependencies import get_current_superuser, get_current_user
 from ..auth.models import User
@@ -28,6 +29,7 @@ async def create_patient_record(
 #     )
 
 
+@alru_cache
 @patient_records_router.get(
     "/get_all_by_patient", response_model=list[schemas.PatientRecords] | list[schemas.ExplorerPatientDTO]
 )

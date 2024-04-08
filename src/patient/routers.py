@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 
+from async_lru import alru_cache
 from ..auth.dependencies import get_current_superuser
 from ..auth.models import User
 from . import schemas
@@ -14,17 +15,17 @@ patient_router = APIRouter(prefix="/patient")
 async def create_patient(patient_data: schemas.PatientCreate, user: User = Depends(get_current_therapist)):
     return await PatientService.create_patient(patient_data=patient_data, user=user)
 
-
+@alru_cache
 @patient_router.get("/get", response_model=schemas.Patient | dict)
 async def get_patient(patient_id: str, user: User = Depends(get_current_therapist)):
     return await PatientService.get_patient(patient_id=patient_id, user=user)
 
-
+@alru_cache
 @patient_router.get("/get_all", response_model=list[schemas.Patient] | list[schemas.ExplorerPatientDTO])
 async def get_all_patients(limit: int = 100, offset: int = 0, user: User = Depends(get_current_user)):
     return await PatientService.get_all_patients(user=user, offset=offset, limit=limit)
 
-
+@alru_cache
 @patient_router.get("/get_all_by_therapist", response_model=list[schemas.Patient])
 async def get_all_patients_by_therapist(
     limit: int = 100, offset: int = 0, user: User = Depends(get_current_therapist)
