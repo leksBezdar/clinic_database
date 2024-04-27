@@ -55,3 +55,9 @@ class ExplorerPatientDTO(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class GetFilters(BaseModel):
+    field: str
+    rule: str
+    value: str

@@ -15,15 +15,26 @@ patient_router = APIRouter(prefix="/patient")
 async def create_patient(patient_data: schemas.PatientCreate, user: User = Depends(get_current_therapist)):
     return await PatientService.create_patient(patient_data=patient_data, user=user)
 
+
 @alru_cache
 @patient_router.get("/get", response_model=schemas.Patient | dict)
 async def get_patient(patient_id: str, user: User = Depends(get_current_therapist)):
     return await PatientService.get_patient(patient_id=patient_id, user=user)
 
+
 @alru_cache
 @patient_router.get("/get_all", response_model=list[schemas.Patient] | list[schemas.ExplorerPatientDTO])
-async def get_all_patients(limit: int = 100, offset: int = 0, user: User = Depends(get_current_user)):
-    return await PatientService.get_all_patients(user=user, offset=offset, limit=limit)
+async def get_all_patients(
+    limit: int = 100,
+    offset: int = 0,
+    user: User = Depends(get_current_user),
+    filters: list[schemas.GetFilters] = [],
+    global_rule: str = "every",
+):
+    return await PatientService.get_all_patients(
+        user=user, offset=offset, limit=limit, filters=filters, global_rule=global_rule
+    )
+
 
 @alru_cache
 @patient_router.get("/get_all_by_therapist", response_model=list[schemas.Patient])

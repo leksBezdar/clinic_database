@@ -1,6 +1,7 @@
 import uuid
 
 from loguru import logger
+from sqlalchemy import and_, or_
 
 from ..auth.models import User
 from ..auth.schemas import UserRole
@@ -42,16 +43,64 @@ class PatientService:
 
     @classmethod
     async def get_all_patients(
-        cls, *filter, user: User, offset: int, limit: int, **filter_by
+        cls, user: User, offset: int, limit: int, filters: list[schemas.GetFilters], global_rule: str
     ) -> list[models.Patient]:
         try:
-            logger.info(f"Пользователь {user.username} с ролью {user.role} получает список всех пациентов")
-            patients = await PatientDAO.find_all(*filter, offset=offset, limit=limit, **filter_by)
+            logger.info(f"User {user.username} with role {user.role} is retrieving all patients")
+
+            if not filters:
+                patients = await cls.__get_all_patients(offset, limit)
+            else:
+                filtered_patients = await cls.__apply_filters(filters)
+                patients = await cls.__get_all_patients_filtered(offset, limit, filtered_patients)
+
             formatted_patients = await cls.__format_patient_data(user=user, patient_records=patients)
             return formatted_patients or []
 
         except Exception as e:
             log_error_with_method_info(e)
+
+    @classmethod
+    async def __get_all_patients(cls, *filter, offset: int, limit: int, **filter_by) -> list[models.Patient]:
+        return await PatientDAO.find_all(*filter, offset=offset, limit=limit, **filter_by)
+
+    @classmethod
+    async def __get_all_patients(cls, offset: int, limit: int) -> list[models.Patient]:
+        return await PatientDAO.find_all(offset=offset, limit=limit)
+
+    @classmethod
+    async def __apply_filters(cls, filters: list[schemas.GetFilters]) -> list[models.Patient]:
+        query_filters = cls.__build_query_filters(filters)
+        return await PatientDAO.filter_by(**query_filters)
+
+    @classmethod
+    def __build_query_filters(cls, filters: list[schemas.GetFilters]) -> dict:
+        query_filters = {}
+        for f in filters:
+            if f.field == "gender":
+                query_filters[f.field] = f.value
+            elif f.field == "birthday":
+                if f.rule == "equals":
+                    query_filters[f.field] = f.value
+                # Другие правила для даты рождения...
+            elif f.field in ["full_name", "living_place", "job_title", "inhabited_locality"]:
+                if f.rule == "contains":
+                    query_filters[f.field] = f.value
+                # Другие правила для строковых полей...
+            elif f.field in ["bp", "ischemia", "dep"]:
+                # Пример фильтрации булевых полей
+                if f.value.lower() == "true":
+                    query_filters[f.field] = True
+                elif f.value.lower() == "false":
+                    query_filters[f.field] = False
+            # Другие типы полей и правила фильтрации...
+        return query_filters
+
+    @classmethod
+    async def __get_all_patients_filtered(
+        cls, offset: int, limit: int, filtered_patients: list[models.Patient]
+    ) -> list[models.Patient]:
+        return filtered_patients[offset : offset + limit]
 
     @classmethod
     async def get_all_patients_by_therapist(
