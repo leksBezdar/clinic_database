@@ -1,8 +1,8 @@
 import datetime
-from operator import not_
-from types import NoneType
 import typing
 import uuid
+from operator import not_
+from types import NoneType
 
 from fastapi import HTTPException
 from loguru import logger
@@ -10,8 +10,8 @@ from sqlalchemy import BinaryExpression, ColumnElement, and_, asc, desc, or_, se
 
 from ..auth.models import User
 from ..auth.schemas import UserRole
-from ..utils import log_error_with_method_info
 from ..database import async_session_maker
+from ..utils import log_error_with_method_info
 from . import models, schemas
 from .dao import PatientDAO
 
@@ -27,15 +27,11 @@ class FilterRules:
             cls.VALID_RULES = cls.__get_valid_rules()
 
     @classmethod
-    def __get_valid_fields(
-        cls, model: schemas.PatientBase = schemas.PatientBase
-    ) -> list[str]:
+    def __get_valid_fields(cls, model: schemas.PatientBase = schemas.PatientBase) -> list[str]:
         return list(model.model_fields.keys())
 
     @classmethod
-    def __get_valid_rules(
-        cls, model: schemas.PatientBase = schemas.PatientBase
-    ) -> dict[str, list[str]]:
+    def __get_valid_rules(cls, model: schemas.PatientBase = schemas.PatientBase) -> dict[str, list[str]]:
         valid_rules: dict[str, list[str]] = {}
         for field, field_type in model.__annotations__.items():
             if not isinstance(field_type, type):
@@ -81,62 +77,40 @@ class FilterRules:
 class FiltersBuilder:
 
     STRING_RULES_MAPPING = {
-        schemas.StringFilter.CONTAINS.value:
-            lambda field_attr, value: field_attr.ilike(f"%{value}%"),
-
-        schemas.StringFilter.STARTS_WITH.value:
-            lambda field_attr, value: field_attr.ilike(f"{value}%"),
-
-        schemas.StringFilter.ENDS_WITH.value:
-            lambda field_attr, value: field_attr.ilike(f"%{value}"),
-
-        schemas.StringFilter.EQUALS.value:
-            lambda field_attr, value: field_attr.ilike(value),
-
-        schemas.StringFilter.NOT_CONTAINS.value:
-            lambda field_attr, value: not_(field_attr.ilike(f"%{value}%")),
-
-        schemas.StringFilter.NOT_EQUALS.value:
-            lambda field_attr, value: not_(field_attr.ilike(value)),
+        schemas.StringFilter.CONTAINS.value: lambda field_attr, value: field_attr.ilike(f"%{value}%"),
+        schemas.StringFilter.STARTS_WITH.value: lambda field_attr, value: field_attr.ilike(f"{value}%"),
+        schemas.StringFilter.ENDS_WITH.value: lambda field_attr, value: field_attr.ilike(f"%{value}"),
+        schemas.StringFilter.EQUALS.value: lambda field_attr, value: field_attr.ilike(value),
+        schemas.StringFilter.NOT_CONTAINS.value: lambda field_attr, value: not_(
+            field_attr.ilike(f"%{value}%")
+        ),
+        schemas.StringFilter.NOT_EQUALS.value: lambda field_attr, value: not_(field_attr.ilike(value)),
     }
 
     BOOLEAN_RULES_MAPPING = {
-        schemas.BooleanFilter.EQUALS.value: 
-            lambda field_attr, value: field_attr == (value.lower() == 'true'),
-            
-        schemas.BooleanFilter.NOT_EQUALS.value: 
-            lambda field_attr, value: field_attr != (value.lower() == 'true'),
+        schemas.BooleanFilter.EQUALS.value: lambda field_attr, value: field_attr == (value.lower() == "true"),
+        schemas.BooleanFilter.NOT_EQUALS.value: lambda field_attr, value: field_attr
+        != (value.lower() == "true"),
     }
 
     INTEGER_RULES_MAPPING = {
-        schemas.IntegerFilter.EQUALS.value:
-            lambda field_attr, value: field_attr == value,
-
-        schemas.IntegerFilter.LESS_THAN_OR_EQUAL.value:
-            lambda field_attr, value: field_attr <= value,
-
-        schemas.IntegerFilter.GREATER_THAN_OR_EQUAL.value:
-            lambda field_attr, value: field_attr >= value,
-
-        schemas.IntegerFilter.LESS_THAN.value:
-            lambda field_attr, value: field_attr < value,
-
-        schemas.IntegerFilter.GREATER_THAN.value:
-            lambda field_attr, value: field_attr > value,
-
-        schemas.IntegerFilter.NOT_EQUALS.value:
-            lambda field_attr, value: field_attr != value,
-
+        schemas.IntegerFilter.EQUALS.value: lambda field_attr, value: field_attr == value,
+        schemas.IntegerFilter.LESS_THAN_OR_EQUAL.value: lambda field_attr, value: field_attr <= value,
+        schemas.IntegerFilter.GREATER_THAN_OR_EQUAL.value: lambda field_attr, value: field_attr >= value,
+        schemas.IntegerFilter.LESS_THAN.value: lambda field_attr, value: field_attr < value,
+        schemas.IntegerFilter.GREATER_THAN.value: lambda field_attr, value: field_attr > value,
+        schemas.IntegerFilter.NOT_EQUALS.value: lambda field_attr, value: field_attr != value,
     }
 
     DATETIME_RULES_MAPPING = INTEGER_RULES_MAPPING
 
     GLOBAL_RULES_MAPPING = {
-        schemas.GlobalRule.EVERY: 
-            lambda query_filters: select(models.Patient).filter(*query_filters.values()),
-        
-        schemas.GlobalRule.SOME: 
-            lambda query_filters: select(models.Patient).filter(or_(*query_filters.values())),
+        schemas.GlobalRule.EVERY: lambda query_filters: select(models.Patient).filter(
+            *query_filters.values()
+        ),
+        schemas.GlobalRule.SOME: lambda query_filters: select(models.Patient).filter(
+            or_(*query_filters.values())
+        ),
     }
 
     @classmethod
@@ -148,11 +122,11 @@ class FiltersBuilder:
             return or_(*query_filters.values())
         if global_rule == schemas.GlobalRule.EVERY:
             return and_(*query_filters.values())
-        
+
         raise HTTPException(status_code=400, detail=("Please, use 'some' or 'every' global rules!"))
-        
+
     @staticmethod
-    def remove_optional(field_type: type) -> type:
+    async def remove_optional(field_type: type) -> type:
         args = typing.get_args(field_type)
         for arg in args:
             if arg is not NoneType:
@@ -161,9 +135,7 @@ class FiltersBuilder:
         return field_type
 
     @classmethod
-    async def build_query_filters(
-        cls, filters: list[schemas.GetFilters]
-    ) -> dict[str, BinaryExpression]:
+    async def build_query_filters(cls, filters: list[schemas.GetFilters]) -> dict[str, BinaryExpression]:
         query_filters: dict[str, BinaryExpression] = {}
         VALID_FIELDS: list[str] = FilterRules.get_valid_fields()
         VALID_RULES: dict[str, list[str]] = FilterRules.get_valid_rules()
@@ -178,9 +150,9 @@ class FiltersBuilder:
                 raise ValueError(f"Invalid rule for {field} field.")
 
             field_type = schemas.PatientBase.__annotations__[field]
-            field_type = cls.remove_optional(field_type)
+            field_type = await cls.remove_optional(field_type)
             value = f.value
-            
+
             if field_type == datetime.date:
                 try:
                     value = datetime.datetime.strptime(value, "%Y-%m-%d").date()
@@ -250,8 +222,7 @@ class PatientService:
 
         except Exception as e:
             log_error_with_method_info(e)
-            
-        
+
     @classmethod
     async def get_all_patients(
         cls,
@@ -261,11 +232,11 @@ class PatientService:
         global_rule: str,
         filters: list[schemas.GetFilters] = [],
         sorting_rules: list[schemas.GetSorting] = [],
-    ) -> list[models.Patient]:    
+    ) -> list[models.Patient]:
         async with async_session_maker() as session:
             query = select(models.Patient).offset(offset).limit(limit)
 
-            if filters:   
+            if filters:
                 query_filters = await FiltersBuilder.apply_filters(filters, global_rule)
                 query = query.where(query_filters)
 
@@ -278,11 +249,10 @@ class PatientService:
 
             result = await session.execute(query.offset(offset).limit(limit))
             patients = result.scalars().all()
-            
-            formatted_patients = await cls.__format_patient_data(user=user, patient_records=patients)
-            
-        return formatted_patients
 
+            formatted_patients = await cls.__format_patient_data(user=user, patient_records=patients)
+
+        return formatted_patients
 
     @classmethod
     async def update_patient(

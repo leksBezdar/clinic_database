@@ -1,6 +1,6 @@
+from async_lru import alru_cache
 from fastapi import APIRouter, Depends
 
-from async_lru import alru_cache
 from ..auth.dependencies import get_current_superuser
 from ..auth.models import User
 from . import schemas
@@ -33,7 +33,12 @@ async def get_all_patients(
     global_rule: schemas.GlobalRule = "every",
 ):
     return await PatientService.get_all_patients(
-        user=user, offset=offset, limit=limit, filters=filters, global_rule=global_rule, sorting_rules=sorting_rules
+        user=user,
+        offset=offset,
+        limit=limit,
+        filters=filters,
+        global_rule=global_rule,
+        sorting_rules=sorting_rules,
     )
 
 

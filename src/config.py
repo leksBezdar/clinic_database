@@ -7,7 +7,6 @@ class Settings(BaseSettings):
     MODE: Literal["DEV", "TEST", "PROD"]
     LOG_LEVEL: Literal["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"]
 
-
     API_KEY: str
 
     DB_HOST: str
@@ -65,8 +64,7 @@ class Settings(BaseSettings):
     MAX_PASSWORD_LENGTH: int
 
     model_config = SettingsConfigDict(env_file=".env", extra="allow")
-    
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.MODE == "DEV" or self.MODE == "TEST":

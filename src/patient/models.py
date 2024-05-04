@@ -1,12 +1,12 @@
 import uuid
+from datetime import date
 from typing import Annotated
 
-from sqlalchemy import Date, UUID, ForeignKey, false
+from sqlalchemy import UUID, Date, ForeignKey, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..base import Base, BaseIDMixin
 from ..patient_records.models import PatientRecord
-from datetime import date, timezone
 
 
 str_null = Annotated[str, mapped_column(nullable=True)]

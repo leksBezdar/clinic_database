@@ -8,8 +8,7 @@ from api_client import APIClient, APIFactory
 from constants import BASE_URL, CHUNK_SIZE, EXCEL_FILE_PATH
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
-from schemas import PatientBase
-from schemas import PatientRecordsBase
+from schemas import PatientBase, PatientRecordsBase
 
 
 class DataParser:

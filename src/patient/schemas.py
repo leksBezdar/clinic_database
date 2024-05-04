@@ -1,8 +1,8 @@
+import uuid
 from datetime import date
 from enum import Enum
-import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 
 class PatientBase(BaseModel):
@@ -67,12 +67,19 @@ class GetFilters(BaseModel):
 
 class Order(Enum):
     ASC = "asc"
-    DESC = "desc" 
-    
-    
+    DESC = "desc"
+
+
 class GetSorting(BaseModel):
     field: str
     order: Order
+
+    @validator("field")
+    def validate_sorting(cls, field_value):
+        if field_value not in PatientBase.__annotations__.keys():
+            raise ValueError(f"Sorting field '{field_value}' is not a valid field")
+        return field_value
+
 
 class StringFilter(Enum):
     EQUALS = "equals"

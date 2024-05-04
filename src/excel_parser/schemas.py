@@ -1,4 +1,3 @@
-from datetime import date
 import uuid
 
 from pydantic import BaseModel

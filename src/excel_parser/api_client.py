@@ -25,10 +25,10 @@ class APIClient:
             if response.status != 200:
                 await cls.write_error_to_file(await response.json())
                 await cls.write_error_to_file(patient_data)
-        
+
             res_json = await response.json()
             return res_json
-        
+
     @classmethod
     async def write_error_to_file(cls, error_message):
         with open("error_log.txt", "a+") as file:

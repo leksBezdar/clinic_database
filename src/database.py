@@ -16,7 +16,7 @@ elif settings.MODE == "PROD":
     DATABASE_PARAMS = {}
 else:
     DATABASE_URL = settings.DATABASE_URL
-    DATABASE_PARAMS = {"echo":True}
+    DATABASE_PARAMS = {"echo": True}
 
 
 async_engine = create_async_engine(DATABASE_URL, **DATABASE_PARAMS)

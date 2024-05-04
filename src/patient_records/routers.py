@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends
 from async_lru import alru_cache
+from fastapi import APIRouter, Depends
 
 from ..auth.dependencies import get_current_superuser, get_current_user
 from ..auth.models import User
