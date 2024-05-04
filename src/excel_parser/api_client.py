@@ -2,8 +2,8 @@ from http.cookies import SimpleCookie
 
 import aiohttp
 from aiohttp import ClientSession
-from .constants import BASE_URL, THERAPIST_LOGIN_DATA
-from .schemas import PatientBase, PatientRecordsBase
+from constants import BASE_URL, THERAPIST_LOGIN_DATA
+from schemas import PatientBase, PatientRecordsBase
 
 
 class APIClient:
@@ -23,9 +23,17 @@ class APIClient:
             f"{BASE_URL}/patient/create", json=patient_data_json, cookies=cookies
         ) as response:
             if response.status != 200:
-                print(f"Failed to create patient {patient_data.full_name}: {response.status}")
+                await cls.write_error_to_file(await response.json())
+                await cls.write_error_to_file(patient_data)
+        
             res_json = await response.json()
             return res_json
+        
+    @classmethod
+    async def write_error_to_file(cls, error_message):
+        with open("error_log.txt", "a+") as file:
+            file.write(str(error_message))
+            file.write("\n")
 
     @classmethod
     async def create_patient_record(

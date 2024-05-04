@@ -1,3 +1,5 @@
+from datetime import date
+from enum import Enum
 import uuid
 
 from pydantic import BaseModel
@@ -5,7 +7,7 @@ from pydantic import BaseModel
 
 class PatientBase(BaseModel):
     full_name: str
-    birthday: str | None = None
+    birthday: date | None = None
     gender: str
     job_title: str | None = None
     living_place: str | None = None
@@ -26,7 +28,7 @@ class PatientCreateDB(PatientBase):
 
 class PatientUpdate(BaseModel):
     full_name: str | None = None
-    birthday: str | None = None
+    birthday: date | None = None
     gender: str | None = None
     job_title: str | None = None
     living_place: str | None = None
@@ -46,7 +48,7 @@ class Patient(PatientBase):
 
 
 class ExplorerPatientDTO(BaseModel):
-    birthday: str
+    birthday: date
     gender: str
     inhabited_locality: str | None = None
     bp: bool = "Нет"
@@ -61,3 +63,49 @@ class GetFilters(BaseModel):
     field: str
     rule: str
     value: str
+
+
+class Order(Enum):
+    ASC = "asc"
+    DESC = "desc" 
+    
+    
+class GetSorting(BaseModel):
+    field: str
+    order: Order
+
+class StringFilter(Enum):
+    EQUALS = "equals"
+    CONTAINS = "contains"
+    STARTS_WITH = "starts_with"
+    ENDS_WITH = "ends_with"
+    NOT_EQUALS = "not_equals"
+    NOT_CONTAINS = "not_contains"
+
+
+class IntegerFilter(Enum):
+    EQUALS = "equals"
+    LESS_THAN_OR_EQUAL = "less_than_or_equal"
+    GREATER_THAN_OR_EQUAL = "greater_than_or_equal"
+    LESS_THAN = "less_than"
+    GREATER_THAN = "greater_than"
+    NOT_EQUALS = "not_equals"
+
+
+class DatetimeFilter(Enum):
+    EQUALS = "equals"
+    LESS_THAN_OR_EQUAL = "less_than_or_equal"
+    GREATER_THAN_OR_EQUAL = "greater_than_or_equal"
+    LESS_THAN = "less_than"
+    GREATER_THAN = "greater_than"
+    NOT_EQUALS = "not_equals"
+
+
+class BooleanFilter(Enum):
+    EQUALS = "equals"
+    NOT_EQUALS = "not_equals"
+
+
+class GlobalRule(Enum):
+    SOME = "some"
+    EVERY = "every"

@@ -1,11 +1,12 @@
 import uuid
 from typing import Annotated
 
-from sqlalchemy import UUID, ForeignKey, false
+from sqlalchemy import Date, UUID, ForeignKey, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..base import Base, BaseIDMixin
 from ..patient_records.models import PatientRecord
+from datetime import date, timezone
 
 
 str_null = Annotated[str, mapped_column(nullable=True)]
@@ -15,7 +16,7 @@ str_not_null = Annotated[str, mapped_column(nullable=False)]
 class Patient(Base, BaseIDMixin):
 
     gender: Mapped[str_not_null]
-    birthday: Mapped[str_null]
+    birthday: Mapped[date] = mapped_column(Date, nullable=True)
     full_name: Mapped[str_not_null]
     living_place: Mapped[str_null]
     job_title: Mapped[str_null]

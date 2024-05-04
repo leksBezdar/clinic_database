@@ -8,7 +8,8 @@ from api_client import APIClient, APIFactory
 from constants import BASE_URL, CHUNK_SIZE, EXCEL_FILE_PATH
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
-from schemas import PatientBase, PatientRecordsBase
+from schemas import PatientBase
+from schemas import PatientRecordsBase
 
 
 class DataParser:
@@ -16,14 +17,14 @@ class DataParser:
     @staticmethod
     async def parse_birthday(birthday: str) -> str:
         if isinstance(birthday, datetime):
-            return str(birthday.date())
+            return birthday.date().isoformat()
         elif birthday in (None, "-", "нет даты"):
-            return "0"
+            return None
         else:
             try:
-                return str(datetime.strptime(birthday, "%d.%m.%Y").date())
+                return datetime.strptime(birthday, "%d.%m.%Y").date().isoformat()
             except (TypeError, ValueError):
-                return str(datetime.now().date())
+                return None
 
     @staticmethod
     async def parse_living_place(living_place: str) -> str | None:
@@ -72,7 +73,6 @@ class RowProcessor:
                 bp=bp,
                 ischemia=ischemia,
             )
-
             response = await APIClient.create_patient(session, cookies, patient_data)
             patient_id = response["id"]
 
@@ -119,17 +119,17 @@ class RowProcessor:
     @classmethod
     async def authenticate_and_process(cls) -> None:
         async with await APIFactory.create_session() as session:
-            if not await APIClient.authenticate(session):
+            cookies = await APIClient.authenticate(session)
+            if not cookies:
                 print({"message": "Failed to authenticate"})
-            cookies = await cls.get_cookies(session)
-
+            cookies = cls.get_cookies(session)
             wb = load_workbook(EXCEL_FILE_PATH)
             sheet = wb["Лист1"]
             await cls.parse_excel_sheet(sheet, cookies, session)
             wb.close()
 
     @staticmethod
-    async def get_cookies(session: aiohttp.ClientSession) -> BaseCookie:
+    def get_cookies(session: aiohttp.ClientSession) -> BaseCookie:
         return session.cookie_jar.filter_cookies(BASE_URL)
 
 

@@ -222,7 +222,7 @@ class AuthService:
                 "access_token",
                 access_token,
                 max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-                httponly=True,
+                httponly=settings.HTTPONLY_COOKIE,
                 samesite=settings.SAMESITE_COOKIE,
                 secure=settings.SECURE_COOKIE,
             )
@@ -230,7 +230,7 @@ class AuthService:
                 "refresh_token",
                 refresh_token,
                 max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 30 * 24 * 60,
-                httponly=True,
+                httponly=settings.HTTPONLY_COOKIE,
                 samesite=settings.SAMESITE_COOKIE,
                 secure=settings.SECURE_COOKIE,
             )
