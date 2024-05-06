@@ -23,7 +23,7 @@ async def get_patient(patient_id: str, user: User = Depends(get_current_therapis
 
 
 @alru_cache
-@patient_router.post("/get_all", response_model=list[schemas.Patient] | list[schemas.ExplorerPatientDTO])
+@patient_router.post("/get_all")
 async def get_all_patients(
     filters: list[schemas.GetFilters] | None = None,
     sorting_rules: list[schemas.GetSorting] | None = None,
@@ -31,7 +31,7 @@ async def get_all_patients(
     offset: int = 0,
     user: User = Depends(get_current_user),
     global_rule: schemas.GlobalRule = "every",
-):
+) -> schemas.GetAllPatientsOut:
     return await PatientService.get_all_patients(
         user=user,
         offset=offset,

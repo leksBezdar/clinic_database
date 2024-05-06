@@ -116,3 +116,18 @@ class BooleanFilter(Enum):
 class GlobalRule(Enum):
     SOME = "some"
     EVERY = "every"
+
+
+class PatientStatictic(BaseModel):
+    bp: int
+    dep: int
+    ischemia: int
+    city: int
+    district: int
+    male: int
+    female: int
+
+
+class GetAllPatientsOut(BaseModel):
+    patients: list[Patient] | list[ExplorerPatientDTO]
+    statistic: PatientStatictic

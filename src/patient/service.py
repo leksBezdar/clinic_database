@@ -6,7 +6,7 @@ from types import NoneType
 
 from fastapi import HTTPException
 from loguru import logger
-from sqlalchemy import BinaryExpression, ColumnElement, and_, asc, desc, or_, select
+from sqlalchemy import BinaryExpression, ColumnElement, and_, asc, desc, func, or_, select
 
 from ..auth.models import User
 from ..auth.schemas import UserRole
@@ -234,7 +234,34 @@ class PatientService:
         sorting_rules: list[schemas.GetSorting] = [],
     ) -> list[models.Patient]:
         async with async_session_maker() as session:
-            query = select(models.Patient).offset(offset).limit(limit)
+            query = (
+                select(
+                    models.Patient,
+                    func.count()
+                    .filter(func.lower(models.Patient.inhabited_locality).contains("город"))
+                    .label("city_count"),
+                    func.count()
+                    .filter(func.lower(models.Patient.inhabited_locality).contains("село"))
+                    .label("district_count"),
+                    func.count().filter(func.lower(models.Patient.gender) == "м").label("male_count"),
+                    func.count().filter(func.lower(models.Patient.gender) == "ж").label("female_count"),
+                    func.count().filter(models.Patient.bp == True).label("bp_count"),
+                    func.count().filter(models.Patient.ischemia == True).label("ischemia_count"),
+                    func.count().filter(models.Patient.dep == True).label("dep_count"),
+                )
+                .group_by(
+                    models.Patient,
+                    models.Patient.gender,
+                    models.Patient.birthday,
+                    models.Patient.full_name,
+                    models.Patient.living_place,
+                    models.Patient.job_title,
+                    models.Patient.therapist_id,
+                    models.Patient.id,
+                )
+                .offset(offset)
+                .limit(limit)
+            )
 
             if filters:
                 query_filters = await FiltersBuilder.apply_filters(filters, global_rule)
@@ -247,44 +274,23 @@ class PatientService:
                     elif rule.order == schemas.Order.DESC:
                         query = query.order_by(desc(getattr(models.Patient, rule.field)))
 
-            result = await session.execute(query.offset(offset).limit(limit))
-            patients = result.scalars().all()
+            result = await session.execute(query)
+            patients_with_stats = result.all()
 
-            formatted_patients = await cls.__format_patient_data(user=user, patient_records=patients)
-
-        return formatted_patients
-
-    @classmethod
-    async def update_patient(
-        cls, patient_id: uuid.UUID, user: User, patient_in: schemas.PatientUpdate
-    ) -> models.Patient:
-        try:
-            logger.info(f"Терапевт {user.username} изменяет данные пациента {patient_id}")
-            patient = await PatientDAO.update(
-                models.Patient.id == patient_id, models.Patient.therapist_id == user.id, obj_in=patient_in
+            statistics = {
+                "bp": sum(row.bp_count for row in patients_with_stats),
+                "dep": sum(row.dep_count for row in patients_with_stats),
+                "ischemia": sum(row.ischemia_count for row in patients_with_stats),
+                "city": sum(row.city_count for row in patients_with_stats),
+                "district": sum(row.district_count for row in patients_with_stats),
+                "male": sum(row.male_count for row in patients_with_stats),
+                "female": sum(row.female_count for row in patients_with_stats),
+            }
+            formatted_patients = await cls.__format_patient_data(
+                user=user, patient_records=[row.Patient for row in patients_with_stats]
             )
-            logger.info(f"Обновленные данные пациента: {patient}")
 
-            return patient
-
-        except Exception as e:
-            log_error_with_method_info(e)
-
-    @classmethod
-    async def delete_patient(cls, patient_id: uuid.UUID, user: User) -> dict:
-        try:
-            logger.info(f"Терапевт {user.username} удаляет пациента {patient_id}")
-            await PatientDAO.delete(models.Patient.id == patient_id)
-
-            return {"message": f"Терапевт {user.username} успешно удалил пациента {patient_id}"}
-
-        except Exception as e:
-            log_error_with_method_info(e)
-
-    @classmethod
-    async def delete_all_patients(cls, superuser: User) -> dict:
-        await PatientDAO.delete()
-        return {"message": "успех"}
+            return {"patients": formatted_patients, "statistic": statistics}
 
     @classmethod
     async def __format_patient_data(cls, user: User, patient_records: list[models.Patient]) -> list:
@@ -336,3 +342,35 @@ class PatientService:
 
         except Exception as e:
             log_error_with_method_info(e)
+
+    @classmethod
+    async def update_patient(
+        cls, patient_id: uuid.UUID, user: User, patient_in: schemas.PatientUpdate
+    ) -> models.Patient:
+        try:
+            logger.info(f"Терапевт {user.username} изменяет данные пациента {patient_id}")
+            patient = await PatientDAO.update(
+                models.Patient.id == patient_id, models.Patient.therapist_id == user.id, obj_in=patient_in
+            )
+            logger.info(f"Обновленные данные пациента: {patient}")
+
+            return patient
+
+        except Exception as e:
+            log_error_with_method_info(e)
+
+    @classmethod
+    async def delete_patient(cls, patient_id: uuid.UUID, user: User) -> dict:
+        try:
+            logger.info(f"Терапевт {user.username} удаляет пациента {patient_id}")
+            await PatientDAO.delete(models.Patient.id == patient_id)
+
+            return {"message": f"Терапевт {user.username} успешно удалил пациента {patient_id}"}
+
+        except Exception as e:
+            log_error_with_method_info(e)
+
+    @classmethod
+    async def delete_all_patients(cls, superuser: User) -> dict:
+        await PatientDAO.delete()
+        return {"message": "успех"}
