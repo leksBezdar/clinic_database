@@ -48,7 +48,7 @@ class Patient(PatientBase):
 
 
 class ExplorerPatientDTO(BaseModel):
-    birthday: date
+    birthday: date | None
     gender: str
     inhabited_locality: str | None = None
     bp: bool = "Нет"

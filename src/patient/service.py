@@ -14,6 +14,7 @@ from ..database import async_session_maker
 from ..utils import log_error_with_method_info
 from . import models, schemas
 from .dao import PatientDAO
+from .schemas import ExplorerPatientDTO
 
 
 class FilterRules:
@@ -232,65 +233,68 @@ class PatientService:
         global_rule: str,
         filters: list[schemas.GetFilters] = [],
         sorting_rules: list[schemas.GetSorting] = [],
-    ) -> list[models.Patient]:
-        async with async_session_maker() as session:
-            query = (
-                select(
-                    models.Patient,
-                    func.count()
-                    .filter(func.lower(models.Patient.inhabited_locality).contains("город"))
-                    .label("city_count"),
-                    func.count()
-                    .filter(func.lower(models.Patient.inhabited_locality).contains("село"))
-                    .label("district_count"),
-                    func.count().filter(func.lower(models.Patient.gender) == "м").label("male_count"),
-                    func.count().filter(func.lower(models.Patient.gender) == "ж").label("female_count"),
-                    func.count().filter(models.Patient.bp == True).label("bp_count"),
-                    func.count().filter(models.Patient.ischemia == True).label("ischemia_count"),
-                    func.count().filter(models.Patient.dep == True).label("dep_count"),
+    ) -> list[models.Patient] | list[ExplorerPatientDTO]:
+        try:
+            async with async_session_maker() as session:
+                query = (
+                    select(
+                        models.Patient,
+                        func.count()
+                        .filter(func.lower(models.Patient.inhabited_locality).contains("город"))
+                        .label("city_count"),
+                        func.count()
+                        .filter(func.lower(models.Patient.inhabited_locality).contains("село"))
+                        .label("district_count"),
+                        func.count().filter(func.lower(models.Patient.gender) == "м").label("male_count"),
+                        func.count().filter(func.lower(models.Patient.gender) == "ж").label("female_count"),
+                        func.count().filter(models.Patient.bp == True).label("bp_count"),
+                        func.count().filter(models.Patient.ischemia == True).label("ischemia_count"),
+                        func.count().filter(models.Patient.dep == True).label("dep_count"),
+                    )
+                    .group_by(
+                        models.Patient,
+                        models.Patient.gender,
+                        models.Patient.birthday,
+                        models.Patient.full_name,
+                        models.Patient.living_place,
+                        models.Patient.job_title,
+                        models.Patient.therapist_id,
+                        models.Patient.id,
+                    )
+                    .offset(offset)
+                    .limit(limit)
                 )
-                .group_by(
-                    models.Patient,
-                    models.Patient.gender,
-                    models.Patient.birthday,
-                    models.Patient.full_name,
-                    models.Patient.living_place,
-                    models.Patient.job_title,
-                    models.Patient.therapist_id,
-                    models.Patient.id,
+
+                if filters:
+                    query_filters = await FiltersBuilder.apply_filters(filters, global_rule)
+                    query = query.where(query_filters)
+
+                if sorting_rules:
+                    for rule in sorting_rules:
+                        if rule.order == schemas.Order.ASC:
+                            query = query.order_by(asc(getattr(models.Patient, rule.field)))
+                        elif rule.order == schemas.Order.DESC:
+                            query = query.order_by(desc(getattr(models.Patient, rule.field)))
+
+                result = await session.execute(query)
+                patients_with_stats = result.all()
+
+                statistics = {
+                    "bp": sum(row.bp_count for row in patients_with_stats),
+                    "dep": sum(row.dep_count for row in patients_with_stats),
+                    "ischemia": sum(row.ischemia_count for row in patients_with_stats),
+                    "city": sum(row.city_count for row in patients_with_stats),
+                    "district": sum(row.district_count for row in patients_with_stats),
+                    "male": sum(row.male_count for row in patients_with_stats),
+                    "female": sum(row.female_count for row in patients_with_stats),
+                }
+                formatted_patients = await cls.__format_patient_data(
+                    user=user, patient_records=[row.Patient for row in patients_with_stats]
                 )
-                .offset(offset)
-                .limit(limit)
-            )
 
-            if filters:
-                query_filters = await FiltersBuilder.apply_filters(filters, global_rule)
-                query = query.where(query_filters)
-
-            if sorting_rules:
-                for rule in sorting_rules:
-                    if rule.order == schemas.Order.ASC:
-                        query = query.order_by(asc(getattr(models.Patient, rule.field)))
-                    elif rule.order == schemas.Order.DESC:
-                        query = query.order_by(desc(getattr(models.Patient, rule.field)))
-
-            result = await session.execute(query)
-            patients_with_stats = result.all()
-
-            statistics = {
-                "bp": sum(row.bp_count for row in patients_with_stats),
-                "dep": sum(row.dep_count for row in patients_with_stats),
-                "ischemia": sum(row.ischemia_count for row in patients_with_stats),
-                "city": sum(row.city_count for row in patients_with_stats),
-                "district": sum(row.district_count for row in patients_with_stats),
-                "male": sum(row.male_count for row in patients_with_stats),
-                "female": sum(row.female_count for row in patients_with_stats),
-            }
-            formatted_patients = await cls.__format_patient_data(
-                user=user, patient_records=[row.Patient for row in patients_with_stats]
-            )
-
-            return {"patients": formatted_patients, "statistic": statistics}
+                return {"patients": formatted_patients, "statistic": statistics}
+        except Exception as e:
+            log_error_with_method_info(e)
 
     @classmethod
     async def __format_patient_data(cls, user: User, patient_records: list[models.Patient]) -> list:
@@ -320,7 +324,9 @@ class PatientService:
                 )
 
                 if len(patient_records) == 1:
-                    return formatted_record
+                    res = []
+                    res.append(formatted_record)
+                    return res
 
                 formatted_patient_records.append(formatted_record)
 

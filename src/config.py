@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     MODE: Literal["DEV", "TEST", "PROD"]
     LOG_LEVEL: Literal["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"]
 
+    SECURE_COOKIE: bool
+    HTTPONLY_COOKIE: bool
+    SAMESITE_COOKIE: Literal["None", "Lax", "Strict"]
+
     API_KEY: str
 
     DB_HOST: str
@@ -53,6 +57,7 @@ class Settings(BaseSettings):
     PASSWORD_SALT_SEPARATOR: str
 
     CORS_ORIGINS: List[str]
+    CORS_ORIGIN_REGEX: str
     CORS_HEADERS: List[str]
     CORS_METHODS: List[str]
     CORS_CREDENTIALS: bool
@@ -64,17 +69,6 @@ class Settings(BaseSettings):
     MAX_PASSWORD_LENGTH: int
 
     model_config = SettingsConfigDict(env_file=".env", extra="allow")
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.MODE == "DEV" or self.MODE == "TEST":
-            self.SECURE_COOKIE = False
-            self.HTTPONLY_COOKIE = False
-            self.SAMESITE_COOKIE = "Lax"
-        elif self.MODE == "PROD":
-            self.SECURE_COOKIE = True
-            self.HTTPONLY_COOKIE = True
-            self.SAMESITE_COOKIE = "Lax"
 
 
 settings: Settings = Settings()  # noqa
