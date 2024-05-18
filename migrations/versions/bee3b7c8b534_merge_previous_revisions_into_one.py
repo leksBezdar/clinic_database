@@ -25,7 +25,7 @@ def upgrade() -> None:
     sa.Column('hashed_password', sa.String(), nullable=False),
     sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('role', sa.String(), server_default='explorer', nullable=True),
-    sa.Column('is_superuser', sa.Boolean(), server_default=sa.text('false'), nullable=False),
+    sa.Column('is_superuser', sa.Boolean(), nullable=False),
     sa.Column('is_active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.PrimaryKeyConstraint('id'),

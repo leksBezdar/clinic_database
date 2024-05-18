@@ -22,7 +22,7 @@ class User(Base, BaseIDMixin):
     created_at: Mapped[datetime_tz_param]
 
     role: Mapped[str] = mapped_column(nullable=True, default="explorer", server_default="explorer")
-    is_superuser: Mapped[bool] = mapped_column(default=False, server_default=false())
+    is_superuser: Mapped[bool] = mapped_column()
     is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
 
     patients: Mapped[list["Patient"]] = relationship("Patient", back_populates="therapist")

@@ -25,7 +25,7 @@ class BaseDAO(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             if isinstance(obj_in, dict):
                 create_data = obj_in
             else:
-                create_data = obj_in.model_dump(exclude_unset=True)
+                create_data = obj_in.model_dump()
 
             try:
                 stmt = insert(cls.model).values(**create_data).returning(cls.model)

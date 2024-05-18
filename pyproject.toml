@@ -23,3 +23,39 @@ imports = ["sqlalchemy", "src", "fastapi", "typing", "auth", "patient", "patient
 
 [tool.pyright]
 include = ["src"]
+
+[tool.poetry]
+name = "clinic-database"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+black = "^24.4.2"
+asyncpg = "^0.29.0"
+email-validator = "^2.1.1"
+gunicorn = "^22.0.0"
+flake8 = "^7.0.0"
+isort = "^5.13.2"
+loguru = "^0.7.2"
+openpyxl = "^3.1.2"
+pre-commit = "^3.7.1"
+pydantic = "^2.7.1"
+pydantic-settings = "^2.2.1"
+pyjwt = "^2.8.0"
+pyright = "^1.1.363"
+pytest = "^8.2.0"
+pytest-asyncio = "^0.23.6"
+sentry-sdk = "^2.2.0"
+sqladmin = "^0.17.0"
+sqlalchemy = "^2.0.30"
+uvicorn = "^0.29.0"
+itsdangerous = "^2.2.0"
+alembic = "^1.13.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

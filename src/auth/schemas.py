@@ -40,6 +40,7 @@ class UserCreate(UserBase):
 
 
 class UserCreateDB(UserBase):
+    is_superuser: bool = False
     hashed_password: str
 
 

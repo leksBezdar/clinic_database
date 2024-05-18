@@ -18,11 +18,11 @@ from .database import async_engine
 from .utils import get_api_key
 
 
-sentry_sdk.init(
-    dsn=settings.SENTRY_DSN,
-    traces_sample_rate=1.0,
-    profiles_sample_rate=1.0,
-)
+# sentry_sdk.init(
+#     dsn=settings.SENTRY_DSN,
+#     traces_sample_rate=1.0,
+#     profiles_sample_rate=1.0,
+# )
 
 app = FastAPI(docs_url=None, redoc_url=None, title="Clinic")
 
